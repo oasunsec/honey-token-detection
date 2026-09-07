@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 from datetime import datetime, timedelta, timezone
+import hashlib
 import ipaddress
 import secrets
 from pathlib import Path
@@ -10,6 +11,8 @@ from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from pydantic import BaseModel, Field, field_validator
 
 from .alerts import send_alert
+from .azure_ingestion import AzureMonitorIngestor
+from .azure_storage import AzureTableDatabase
 from .config import Settings
 from .db import Database
 from .decoys import TRANSPARENT_GIF_B64, callback_url, create_docx_decoy, create_html_decoy, validate_filename
@@ -36,13 +39,36 @@ class DecoyCreate(BaseModel):
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings()
-    db = Database(settings.db_path)
+    settings.validate()
+    if settings.storage_backend == "azure_table":
+        db = AzureTableDatabase(
+            settings.azure_storage_account_url,
+            settings.azure_table_hits,
+            settings.azure_table_outbox,
+        )
+    else:
+        db = Database(settings.db_path)
+    ingestor = None
+    if settings.azure_dcr_endpoint and settings.azure_dcr_immutable_id:
+        ingestor = AzureMonitorIngestor(
+            settings.azure_dcr_endpoint,
+            settings.azure_dcr_immutable_id,
+            settings.azure_dcr_stream_name,
+        )
     app = FastAPI(title="Canary Honeytoken MVP", version="0.1.0")
     app.state.settings = settings
     app.state.db = db
+    app.state.azure_ingestor = ingestor
+
+    def add_public_id(token: dict) -> dict:
+        token = dict(token)
+        token["canary_id"] = hashlib.sha256(token["id"].encode()).hexdigest()[:16]
+        return token
 
     def require_management_access(request: Request) -> None:
         """Protect management routes with an API key or local-only fallback."""
+        if settings.receiver_only:
+            raise HTTPException(status_code=404, detail="Not found")
         if settings.management_api_key:
             supplied = request.headers.get("x-canary-api-key", "")
             if not supplied or not secrets.compare_digest(supplied, settings.management_api_key):
@@ -62,12 +88,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/health")
     def health() -> dict:
-        return {"status": "ok"}
+        return {
+            "status": "ok",
+            "receiver_only": settings.receiver_only,
+            "receiver_version": settings.receiver_version,
+            "storage_backend": settings.storage_backend,
+        }
 
     @app.post("/api/tokens", dependencies=[Depends(require_management_access)])
     def create_token(body: TokenCreate) -> dict:
         token_id = secrets.token_urlsafe(18)
-        token = db.create_token(token_id, body.name, body.filename, body.severity, body.notes)
+        token = add_public_id(db.create_token(token_id, body.name, body.filename, body.severity, body.notes))
         token["callback_url"] = callback_url(settings.base_url, token_id)
         return token
 
@@ -75,6 +106,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def list_tokens() -> list[dict]:
         tokens = db.list_tokens()
         for token in tokens:
+            token.update(add_public_id(token))
             token["callback_url"] = callback_url(settings.base_url, token["id"])
         return tokens
 
@@ -105,7 +137,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/api/events", dependencies=[Depends(require_management_access)])
     def list_events(limit: int = 100) -> list[dict]:
-        return db.list_events(max(1, min(limit, 1000)))
+        public_events = []
+        for event in db.list_events(max(1, min(limit, 1000))):
+            event = dict(event)
+            raw_id = str(event.get("token_id", ""))
+            event["canary_id"] = hashlib.sha256(raw_id.encode()).hexdigest()[:16] if raw_id else ""
+            event["token_id"] = "[redacted]"
+            event["request_path"] = "/t/[redacted]/pixel.gif"
+            public_events.append(event)
+        return public_events
 
     @app.get("/t/{token_id}/pixel.gif")
     def trigger(token_id: str, request: Request) -> Response:
@@ -113,6 +153,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if not token or not token["active"]:
             # Do not disclose whether a historical token exists.
             raise HTTPException(404, "Not found")
+        token = add_public_id(token)
 
         if settings.trust_proxy_headers:
             forwarded = request.headers.get("x-forwarded-for", "")
@@ -140,6 +181,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             db.set_alert_status(event["id"], "failed", str(exc)[:500])
             raise
         db.set_alert_status(event["id"], alert_status)
+        if ingestor:
+            try:
+                event["alert_status"] = alert_status
+                ingestor.publish(event, token, settings.receiver_version)
+                db.set_sentinel_status(event["id"], "sent")
+            except Exception as exc:
+                db.set_sentinel_status(event["id"], "failed", str(exc)[:500])
         gif = base64.b64decode(TRANSPARENT_GIF_B64)
         return Response(content=gif, media_type="image/gif", headers={"Cache-Control": "no-store, no-cache, must-revalidate"})
 

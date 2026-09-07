@@ -1,0 +1,5 @@
+CanaryHit_CL
+| where TimeGenerated > ago(24h)
+| where FirstHit == true
+| project TimeGenerated, CanaryId, ArtifactName, SourceIp, UserAgent, Classification, NotificationStatus, EventId
+| order by TimeGenerated desc

@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS events (
     duplicate INTEGER NOT NULL DEFAULT 0,
     alert_status TEXT NOT NULL DEFAULT 'pending',
     alert_error TEXT NOT NULL DEFAULT '',
+    sentinel_status TEXT NOT NULL DEFAULT 'pending',
+    sentinel_error TEXT NOT NULL DEFAULT '',
     FOREIGN KEY(token_id) REFERENCES tokens(id)
 );
 CREATE INDEX IF NOT EXISTS idx_events_token_time ON events(token_id, occurred_at);
@@ -60,6 +62,10 @@ class Database:
                 con.execute("ALTER TABLE events ADD COLUMN alert_status TEXT NOT NULL DEFAULT 'pending'")
             if "alert_error" not in columns:
                 con.execute("ALTER TABLE events ADD COLUMN alert_error TEXT NOT NULL DEFAULT ''")
+            if "sentinel_status" not in columns:
+                con.execute("ALTER TABLE events ADD COLUMN sentinel_status TEXT NOT NULL DEFAULT 'pending'")
+            if "sentinel_error" not in columns:
+                con.execute("ALTER TABLE events ADD COLUMN sentinel_error TEXT NOT NULL DEFAULT ''")
 
     def create_token(self, token_id: str, name: str, filename: str, severity: str, notes: str = "") -> dict:
         created_at = datetime.now(timezone.utc).isoformat()
@@ -111,7 +117,8 @@ class Database:
                 """INSERT INTO events(
                     token_id,occurred_at,source_ip,user_agent,request_path,event_type,triage_label,severity,duplicate,
                     alert_status,alert_error
-                ) VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+                    ,sentinel_status,sentinel_error
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     token_id,
                     occurred_at,
@@ -124,6 +131,8 @@ class Database:
                     1 if duplicate else 0,
                     "pending",
                     "",
+                    "pending",
+                    "",
                 ),
             )
             event_id = cur.lastrowid
@@ -134,6 +143,13 @@ class Database:
         with self.conn() as con:
             con.execute(
                 "UPDATE events SET alert_status=?, alert_error=? WHERE id=?",
+                (status, error, event_id),
+            )
+
+    def set_sentinel_status(self, event_id: int, status: str, error: str = "") -> None:
+        with self.conn() as con:
+            con.execute(
+                "UPDATE events SET sentinel_status=?, sentinel_error=? WHERE id=?",
                 (status, error, event_id),
             )
 

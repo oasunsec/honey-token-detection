@@ -125,6 +125,30 @@ def test_management_api_requires_key_when_configured(tmp_path: Path):
     assert client.get("/api/events", headers={"x-canary-api-key": "lab-key"}).status_code == 200
 
 
+def test_receiver_only_hides_management_routes(tmp_path: Path):
+    settings = Settings(
+        db_path=str(tmp_path / "receiver.db"),
+        base_url="https://receiver.example",
+        receiver_only=True,
+    )
+    client = TestClient(create_app(settings))
+    assert client.get("/health").json()["receiver_only"] is True
+    assert client.get("/api/events").status_code == 404
+
+
+def test_public_event_view_redacts_callback_secret(tmp_path: Path):
+    client = make_client(tmp_path)
+    token = client.post(
+        "/api/tokens",
+        json={"name": "Redaction", "filename": "Redaction.docx", "severity": "high"},
+    ).json()
+    client.get(f"/t/{token['id']}/pixel.gif")
+    event = client.get("/api/events").json()[0]
+    assert token["id"] not in str(event)
+    assert event["canary_id"] == token["canary_id"]
+    assert event["request_path"] == "/t/[redacted]/pixel.gif"
+
+
 def test_remote_management_requires_key_when_unconfigured(tmp_path: Path):
     settings = Settings(db_path=str(tmp_path / "remote.db"), base_url="http://testserver")
     remote = TestClient(create_app(settings), client=("203.0.113.10", 1234))

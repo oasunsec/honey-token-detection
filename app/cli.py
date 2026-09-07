@@ -7,6 +7,7 @@ import secrets
 
 from .config import Settings
 from .db import Database
+from .azure_storage import AzureTableDatabase
 from .decoys import callback_url, create_docx_decoy, create_html_decoy, validate_filename
 
 
@@ -24,7 +25,16 @@ def main() -> None:
 
     args = parser.parse_args()
     settings = Settings()
-    db = Database(settings.db_path)
+    settings.validate()
+    db = (
+        AzureTableDatabase(
+            settings.azure_storage_account_url,
+            settings.azure_table_hits,
+            settings.azure_table_outbox,
+        )
+        if settings.storage_backend == "azure_table"
+        else Database(settings.db_path)
+    )
 
     if args.command == "create":
         validate_filename(args.filename)

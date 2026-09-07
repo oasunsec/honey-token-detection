@@ -1,0 +1,8 @@
+using './main.bicep'
+
+param location = 'southcentralus'
+param projectPrefix = 'canarysec'
+param containerImage = ''
+param deployContainerApp = false
+param acrSku = 'Basic'
+param minReplicas = 1

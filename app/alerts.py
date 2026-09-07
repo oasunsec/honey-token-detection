@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from email.message import EmailMessage
+import hashlib
 import smtplib
 
 from .config import Settings
@@ -12,7 +13,8 @@ def render_alert(event: dict, token: dict) -> tuple[str, str]:
         [
             "A decoy/honeytoken was accessed.",
             "",
-            f"Token: {token['name']} ({token['id']})",
+            f"Canary: {token['name']}",
+            f"Canary ID: {token.get('canary_id') or hashlib.sha256(token['id'].encode()).hexdigest()[:16]}",
             f"File: {token['filename']}",
             f"Time: {event['occurred_at']}",
             f"Source IP: {event['source_ip']}",

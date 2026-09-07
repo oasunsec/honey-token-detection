@@ -15,4 +15,7 @@ logs/
 generated/
 decoys/
 output/
+evidence-private/
+*.bicep.deploy.json
+*.bicep.deploy.parameters.json
 .DS_Store
