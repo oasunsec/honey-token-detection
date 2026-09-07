@@ -19,6 +19,3 @@ evidence-private/
 *.bicep.deploy.json
 *.bicep.deploy.parameters.json
 .DS_Store
-
-# Keep local agent instructions out of the public repository
-AGENTS.md
