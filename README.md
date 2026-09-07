@@ -1,12 +1,12 @@
 # Honey Token
 
-Built an Azure-backed document-honeytoken receiver and connected its events to Microsoft Sentinel. The work extended a local Python service with durable storage, managed-identity ingestion, and a scheduled detection rule. A separate Word test confirmed that the generated DOCX requested its local callback.
+Built an Azure-backed document honeytoken receiver and wired its events into Microsoft Sentinel. The local service already generated DOCX/HTML decoys and stored callbacks in SQLite; this pass added Azure Table Storage, managed-identity deployment, Logs Ingestion, and a scheduled Sentinel rule.
 
 [Case study](CASE_STUDY.md) · [Screenshots](docs/evidence/public/README.md) · [Run locally](docs/SETUP.md) · [Architecture](ARCHITECTURE.md)
 
 [![Honey Token: separate local Word and Azure-to-Sentinel event paths](docs/diagrams/tested-event-paths.png)](docs/diagrams/tested-event-paths.png)
 
-**Built with:** Python, FastAPI, SQLite, Azure Table Storage, Container Apps, Bicep, Log Analytics, KQL, Microsoft Sentinel, Docker, and GitHub Actions.
+**Stack:** Python, FastAPI, SQLite, Azure Table Storage, Container Apps, Bicep, Log Analytics, KQL, Microsoft Sentinel, Docker, and GitHub Actions.
 
 ## Local demo
 
@@ -14,25 +14,25 @@ Built an Azure-backed document-honeytoken receiver and connected its events to M
 
 [Watch the MP4](docs/demo/local-word-callback.mp4)
 
-The local Word recording and the Azure-to-Sentinel evidence cover separate test paths; the Sentinel path is documented in the [case study](CASE_STUDY.md).
+The recording covers the local Word path. The Azure-to-Sentinel path is shown separately in the [case study](CASE_STUDY.md).
 
-## Implementation
+## What changed
 
-- Added an Azure Table backend while retaining SQLite for local runs.
-- Deployed a receiver with public callback routes, disabled management routes, and scoped managed-identity permissions.
-- Connected stored events to Log Analytics and Sentinel; corrected the ingestion endpoint after the first delivery failed.
-- Fixed SMTP failure handling and malformed-key errors, and expanded the regression suite from nine to 16 tests.
-- Restricted the Docker build context, bound Compose to loopback, and disabled access logs containing callback tokens.
+- Kept SQLite for local runs and added Azure Table Storage for deployed events and notification outcomes.
+- Deployed a receiver-only Container App with HTTPS ingress, disabled management routes, and scoped managed-identity roles.
+- Fixed the DCR endpoint after the first ingestion attempt failed DNS resolution; later events reached Log Analytics and created a Sentinel incident.
+- Separated event persistence from notification and Sentinel delivery so a delivery failure did not discard a hit.
+- Fixed SMTP failure handling, malformed management-key comparison, the Docker build context, and loopback Compose binding.
 
-## Recorded results
+## Observed results
 
-| Path exercised | Result | Evidence |
+| Path | Result | Evidence |
 | --- | --- | --- |
-| Local Word document | Word requested the pixel; the receiver stored a high-severity event and a sent console alert | [Word callback](docs/evidence/public/README.md#07-word-callback-and-triage) |
-| Controlled Azure callback | The event reached Table Storage and Log Analytics; the scheduled rule created a high-severity incident | [Sentinel incident](docs/evidence/public/README.md#11-sentinel-incident) |
-| Repeat callback and local SMTP | Both callbacks were stored; one email was delivered within the suppression window | [Test results](TESTING.md) |
+| Local Word document | Word requested the pixel; SQLite stored a high-severity event and the console alert was sent | [Word callback](docs/evidence/public/README.md#07-word-callback-and-triage) |
+| Controlled Azure callback | Table Storage and Log Analytics received the event; the scheduled rule created a high-severity incident | [Sentinel incident](docs/evidence/public/README.md#11-sentinel-incident) |
+| Repeat callback and local SMTP | Both events were stored; the repeat notification was suppressed and the local sink received one email | [Test details](TESTING.md) |
 
-The Word and Azure paths were tested separately. [Viewer coverage](COMPATIBILITY.md) and [operational limits](LIMITATIONS.md) record the scope of those results.
+The Word and Azure paths were separate runs. [Viewer coverage](COMPATIBILITY.md) and [operational limits](LIMITATIONS.md) state what the evidence does not prove.
 
 ## Documentation
 
@@ -42,7 +42,7 @@ The Word and Azure paths were tested separately. [Viewer coverage](COMPATIBILITY
 | Implementation | [Architecture](ARCHITECTURE.md), [Azure deployment](AZURE_DEPLOYMENT.md), [Sentinel rule and queries](SENTINEL.md) |
 | Run and maintain | [Setup](docs/SETUP.md), [tests](TESTING.md), [security](SECURITY.md), [cost and teardown](COST_AND_TEARDOWN.md) |
 
-Examples use synthetic documents and controlled test systems. Use is limited to environments the operator owns or has permission to monitor.
+Examples use synthetic documents and controlled test systems.
 
 ## License
 

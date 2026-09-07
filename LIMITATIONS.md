@@ -2,22 +2,22 @@
 
 ## Collection and attribution
 
-The DOCX callback depends on network access and a viewer loading the external image relationship. External-content policy, Protected View, proxies, DNS controls, or endpoint security can block it. The relationship can also be removed from the document.
+The DOCX callback depends on the viewer loading the external image relationship and having network access. Protected View, external-content policy, proxies, DNS controls, endpoint security, or document rewriting can block it.
 
-A stored callback records a resource request. Source IPs can belong to NAT gateways, VPNs, proxies, or scanners. The project did not correlate these records with identity or endpoint telemetry and did not detect data exfiltration.
+The receiver stores the source IP observed at the ingress, User-Agent, timestamp, request path, triage result, severity, repeat decision, and delivery status. That source IP may belong to a NAT gateway, VPN, proxy, or scanner. The project did not correlate the event with identity, endpoint, or file-audit telemetry, so it cannot identify who opened the document or prove exfiltration.
 
 ## Delivery and storage
 
-Delivery remained synchronous. Failed notifications were recorded, but no automatic retry worker was implemented. Duplicate suppression was best effort across concurrent receiver instances; it did not provide atomic suppression across instances.
+Delivery is synchronous. A failed notification is recorded, but no retry worker was implemented. Duplicate suppression is best effort across concurrent receiver instances and does not provide atomic suppression across instances.
 
-Azure Table Storage retained events and delivery outcomes. It was not configured as a tamper-evident archive, and no project retention policy was implemented.
+Azure Table Storage retains events and delivery outcomes. No tamper-evident archive or project retention policy was implemented.
 
 ## Cloud deployment
 
-The receiver used Azure HTTPS ingress without a project-level rate limiter or WAF. Management routes were disabled in the deployed receiver. Provisioning used a separate local operator process.
+The receiver uses Azure HTTPS ingress without a project-level rate limiter or WAF. Management routes are disabled in the deployed receiver, while provisioning remains a local operator action.
 
-The Sentinel rule used a five-minute schedule and ten-minute lookback. It selected all `canary_trigger` rows, including scanner and repeat events, and assigned the rule's configured high severity. Receiver notification suppression did not suppress Sentinel rule evaluation. Overlapping query windows could select the same event again.
+The Sentinel rule runs every five minutes with a ten-minute lookback. It selects all `canary_trigger` rows, including scanner and repeat events, and assigns the rule's configured high severity. Receiver notification suppression does not suppress Sentinel rule evaluation; overlapping windows can select an event again.
 
 ## Coverage
 
-SMTP delivery was exercised against a local test sink; cloud SMTP was not configured. [COMPATIBILITY.md](COMPATIBILITY.md) records Word and viewer coverage. [COST_AND_TEARDOWN.md](COST_AND_TEARDOWN.md) records resource lifecycle and cost status.
+SMTP was exercised against a local test sink. Cloud SMTP was not configured. [COMPATIBILITY.md](COMPATIBILITY.md) records viewer coverage, and [COST_AND_TEARDOWN.md](COST_AND_TEARDOWN.md) records the resource lifecycle and cost status.

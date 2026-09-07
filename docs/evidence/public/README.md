@@ -1,8 +1,8 @@
 # Honey Token — screenshot walkthrough
 
-Project walkthrough recorded on 7 September 2026, covering setup, deployment, document retrieval, event triage, Sentinel ingestion, and tests. Word and GitHub images are application captures. Azure images display saved API and query records, rather than the Azure portal. No teardown was performed.
+Recorded evidence from the 7 September 2026 run: baseline, deployment, document retrieval, event triage, Sentinel ingestion, and tests. Word and GitHub images are application captures. Azure images show saved API and query records rather than Azure portal screenshots. Teardown was not run.
 
-Account details, email addresses, source IPs, tenant/subscription identifiers, callback tokens, and resource endpoints are redacted or excluded. Raw records remain outside this package.
+Account details, email addresses, source IPs, tenant and subscription identifiers, callback tokens, and resource endpoints are redacted or omitted. Raw records remain outside this package.
 
 [Open the offline gallery](index.html). Image hashes are recorded in [captions.json](captions.json).
 
@@ -14,7 +14,7 @@ Account details, email addresses, source IPs, tenant/subscription identifiers, c
 
 **Design summary** — Source: `ARCHITECTURE.md`.
 
-Extended the local document-token receiver with Azure Table Storage and Sentinel ingestion. Word and cloud callbacks were exercised separately.
+The diagram separates the local Word callback from the controlled Azure-to-Sentinel path.
 
 ![Purpose and architecture](01-evidence.jpg)
 
@@ -22,7 +22,7 @@ Extended the local document-token receiver with Azure Table Storage and Sentinel
 
 **Archived record, captured 2026-09-07** — Source: `00-azure-start-state.json + docs/BASELINE.md`.
 
-Recorded the local SQLite starting point and nine passing baseline tests before adding the Azure adapters.
+The local SQLite service started with nine passing tests before the Azure adapters were added.
 
 ![Starting state and baseline](02-evidence.jpg)
 
@@ -30,7 +30,7 @@ Recorded the local SQLite starting point and nine passing baseline tests before 
 
 **Archived Azure deployment response** — Source: `03-bicep-final-deployment.json`.
 
-Deployed the Bicep resources successfully. Resource identifiers and endpoint values are omitted from the saved response.
+Bicep deployed the receiver infrastructure. Resource identifiers and endpoint values are omitted.
 
 ![Infrastructure deployment](03-evidence.jpg)
 
@@ -38,7 +38,7 @@ Deployed the Bicep resources successfully. Resource identifiers and endpoint val
 
 **Source configuration evidence** — Source: `infra/main.bicep`.
 
-Disabled registry admin access and storage shared keys, required HTTPS, and disabled public management routes in the deployment configuration.
+The deployment disabled registry admin access and storage shared keys, required HTTPS, and disabled public management routes.
 
 ![Receiver security configuration](04-evidence.jpg)
 
@@ -46,7 +46,7 @@ Disabled registry admin access and storage shared keys, required HTTPS, and disa
 
 **Archived HTTP result** — Source: `09-container-app-health.json`.
 
-Requested the deployed health endpoint; it returned HTTP 200 with receiver-only mode and Azure Table Storage.
+The deployed health endpoint returned HTTP 200 with receiver-only mode and Azure Table Storage.
 
 ![Deployed receiver health](05-evidence.jpg)
 
@@ -54,7 +54,7 @@ Requested the deployed health endpoint; it returned HTTP 200 with receiver-only 
 
 **Microsoft Word UI capture** — Source: `Word 16.0.20326.20132`.
 
-Opened the generated synthetic document in Word. The local callback it produced is recorded in image 07.
+Word opened the generated synthetic document. Its local callback appears in image 07.
 
 ![Word renders the synthetic decoy](06-word-decoy.png)
 
@@ -62,7 +62,7 @@ Opened the generated synthetic document in Word. The local callback it produced 
 
 **Archived event from observed Word open** — Source: `word-viewer-result.json`.
 
-Captured the Office User-Agent and high-severity event when Word requested the loopback pixel.
+The event recorded the Office User-Agent, source metadata, high severity, and a sent console alert when Word requested the loopback pixel.
 
 ![Word callback and triage](07-evidence.jpg)
 
@@ -70,15 +70,15 @@ Captured the Office User-Agent and high-severity event when Word requested the l
 
 **Archived Azure Table query** — Source: `table-events-sanitized.json`.
 
-Queried stored events and retained both successful delivery outcomes and the first failed ingestion attempt.
+The query retained successful delivery outcomes and the first failed ingestion attempt.
 
 ![Persisted events and delivery outcomes](08-evidence.jpg)
 
 ## 09. Log Analytics ingestion
 
-**Archived CanaryHit_CL query** — Source: `log-analytics-latest.json`.
+**Archived `CanaryHit_CL` query** — Source: `log-analytics-latest.json`.
 
-Queried four ingested records, including a scanner classification and a suppressed repeat notification.
+Four records reached Log Analytics, including a scanner classification and a suppressed repeat notification.
 
 ![Log Analytics ingestion](09-evidence.jpg)
 
@@ -86,7 +86,7 @@ Queried four ingested records, including a scanner classification and a suppress
 
 **Archived rule configuration** — Source: `sentinel-rule.json`.
 
-Deployed a five-minute Sentinel rule with a ten-minute lookback and incident creation enabled. The query selected all callback rows; scanner and repeat rows were included.
+The rule ran every five minutes with a ten-minute lookback and incident creation enabled. It selected callback rows, including scanner and repeat rows.
 
 ![Sentinel analytic rule](10-evidence.jpg)
 
@@ -94,7 +94,7 @@ Deployed a five-minute Sentinel rule with a ten-minute lookback and incident cre
 
 **Archived Sentinel incident response** — Source: `sentinel-incidents.json`.
 
-Recorded the resulting high-severity Sentinel incident. Account and resource identifiers are omitted.
+The rule created a high-severity incident. Account and resource identifiers are omitted.
 
 ![Sentinel incident](11-evidence.jpg)
 
@@ -102,7 +102,7 @@ Recorded the resulting high-severity Sentinel incident. Account and resource ide
 
 **GitHub UI capture** — Source: `Actions run 34152044446, commit 2858824`.
 
-Captured the completed main-branch CI run after the application fixes.
+The main-branch CI run completed after the application fixes.
 
 ![GitHub main CI status](12-github-ci-status.jpg)
 
@@ -110,7 +110,7 @@ Captured the completed main-branch CI run after the application fixes.
 
 **GitHub UI capture** — Source: `Actions run 34152044446`.
 
-Captured the successful test job in the same GitHub Actions run.
+The test job completed successfully in the same run.
 
 ![GitHub test job](13-github-test-job.jpg)
 
@@ -118,7 +118,7 @@ Captured the successful test job in the same GitHub Actions run.
 
 **GitHub UI capture** — Source: `Job 101836165394 in Actions run 34152044446`.
 
-Captured the pytest output from the completed GitHub test job.
+The job log recorded the pytest run from the completed Actions job.
 
 ![GitHub pytest log](14-github-pytest-output.jpg)
 
@@ -126,7 +126,7 @@ Captured the pytest output from the completed GitHub test job.
 
 **Recorded test output** — Source: `portfolio/pytest.txt + tests/test_smtp_delivery.py`.
 
-Ran the suite, including delivery to a local SMTP sink and the SMTP-failure regression. Sixteen tests passed.
+Sixteen tests passed, including local SMTP delivery and the SMTP-failure regression.
 
 ![Local regression and SMTP delivery](15-evidence.jpg)
 
@@ -134,14 +134,14 @@ Ran the suite, including delivery to a local SMTP sink and the SMTP-failure regr
 
 **Gitleaks output** — Source: `portfolio/gitleaks.txt`.
 
-Scanned the tracked history with Gitleaks; the recorded scan found no secrets.
+The tracked history scan found no secrets.
 
 ![Secret scanning](16-evidence.jpg)
 
-## 17. Limitations and teardown status
+## 17. Limits and teardown status
 
 **Operational notes** — Source: `LIMITATIONS.md + COST_AND_TEARDOWN.md`.
 
-Recorded the resource state at the end of the run. The cleanup command and operational constraints are documented separately.
+The package records the remaining operational limits and the fact that resource cleanup was not run.
 
 ![Limitations and teardown status](17-evidence.jpg)
