@@ -33,11 +33,11 @@
     "number": "04",
     "title": "Receiver security configuration",
     "source": "infra/main.bicep",
-    "kind": "Source configuration evidence",
+    "kind": "Deployment security summary",
     "content": "adminUserEnabled: false\nallowSharedKeyAccess: false\nsupportsHttpsTrafficOnly: true\ntype: 'UserAssigned'\nallowInsecure: false\n{ name: 'CANARY_RECEIVER_ONLY', value: 'true' }\n\nScoped roles: AcrPull; Storage Table Data Contributor; Monitoring Metrics Publisher.\nManagement routes return 404 in receiver-only mode.",
-    "meaning": "Disabled registry admin access and storage shared keys, required HTTPS, and disabled public management routes in the deployment configuration.",
+    "meaning": "Summarized the security settings implemented in the deployment template: shared keys and registry admin access disabled, HTTPS required, and management routes disabled in receiver-only mode.",
     "image": "04-evidence.jpg",
-    "sha256": "444b194283d80dba6480eaa2e3659de9a5e0e9696ef8fe29e0cfb04c866dc0d2"
+    "sha256": "617d576b7aaddff07c9a8dd0f274f8bdc042091a5365150a3bc9c4d9f76c4cad"
   },
   {
     "number": "05",

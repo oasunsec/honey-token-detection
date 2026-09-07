@@ -36,9 +36,9 @@ Deployed the Bicep resources successfully. Resource identifiers and endpoint val
 
 ## 04. Receiver security configuration
 
-**Source configuration evidence** - Source: `infra/main.bicep`.
+**Deployment security summary** - Source: `infra/main.bicep`.
 
-Disabled registry admin access and storage shared keys, required HTTPS, and disabled public management routes in the deployment configuration.
+Summarized the security settings implemented in the deployment template: shared keys and registry admin access disabled, HTTPS required, and management routes disabled in receiver-only mode.
 
 ![Receiver security configuration](04-evidence.jpg)
 
