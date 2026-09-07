@@ -15,7 +15,7 @@ The DOCX packages contained the intended unique external relationship, but no Mi
 | Check | Result |
 | --- | --- |
 | Dependency installation | Passed in `.venv` with `requirements.txt` |
-| `pytest -q` | **6 passed, 2 deprecation warnings** after configuring an ignored repo-local pytest temp root |
+| `pytest -q` | **9 passed, 2 deprecation warnings** after configuring an ignored repo-local pytest temp root |
 | FastAPI process | Uvicorn started successfully on loopback |
 | `/health` | HTTP 200, `{"status":"ok"}` |
 | Required decoy names | Created `Synthetic_Forecast.docx` and `Executive_Bonus_2027.docx` with the CLI |
@@ -61,7 +61,7 @@ The working tree and every committed revision were inspected with Git status, `g
 
 ## GitHub result
 
-The repository is private at [oasunsec/canary-honeytoken-detection](https://github.com/oasunsec/canary-honeytoken-detection), with `main` tracking the pushed local branch. GitHub verified `private=true` before the first push. The first Actions run failed during test collection because the `pytest` executable did not include the repository root on `sys.path` (`ModuleNotFoundError: No module named 'app'`); that failure was reproduced locally and fixed with `pythonpath = .` in `pytest.ini`. The corrective commit `7cd171e` passed the exact CI command in [Actions run 34098455507](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34098455507). The earlier failed run remains visible as [34098248436](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34098248436) and is explained here rather than hidden.
+The repository is private at [oasunsec/canary-honeytoken-detection](https://github.com/oasunsec/canary-honeytoken-detection), with `main` tracking the pushed local branch. GitHub verified `private=true` before the first push. The first Actions run failed during test collection because the `pytest` executable did not include the repository root on `sys.path` (`ModuleNotFoundError: No module named 'app'`); that failure was reproduced locally and fixed with `pythonpath = .` in `pytest.ini`. The corrective commit `7cd171e` passed the exact CI command in [Actions run 34098455507](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34098455507). The hardening commit `d96ca84` also passed all jobs in [Actions run 34127633229](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34127633229). The earlier failed run remains visible as [34098248436](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34098248436) and is explained here rather than hidden.
 
 ## Recommendation
 
