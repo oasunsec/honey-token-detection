@@ -86,7 +86,7 @@ The working tree, tracked paths, and commit history were checked with `git statu
 
 ## GitHub result
 
-The repository is private at [oasunsec/canary-honeytoken-detection](https://github.com/oasunsec/canary-honeytoken-detection). The earlier all-jobs failure was a test-collection import-path problem (`ModuleNotFoundError: No module named 'app'`); `pytest.ini` now sets `pythonpath = .`, and the feature branch run for commit `7427aab` passed all jobs in [Actions run 34148126782](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34148126782). The final documentation and infrastructure changes in this working tree must pass one more Actions run after the next commit and push; that result will be recorded before completion.
+The repository is private at [oasunsec/canary-honeytoken-detection](https://github.com/oasunsec/canary-honeytoken-detection). The earlier all-jobs failure was a test-collection import-path problem (`ModuleNotFoundError: No module named 'app'`); `pytest.ini` now sets `pythonpath = .`, the feature branch run for commit `7427aab` passed all jobs in [Actions run 34148126782](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34148126782), and the completed validation/documentation commit `ea86b4b` passed all jobs in [Actions run 34150337343](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34150337343).
 
 ## Teardown
 
@@ -99,3 +99,4 @@ Keep the repository private and treat this as a cloud-security validation MVP. I
 ## Final release status
 
 `NOT_READY_FOR_PUBLIC`
+
