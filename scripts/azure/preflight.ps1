@@ -12,9 +12,9 @@ az account show --output json | Set-Content (Join-Path $evidence '00-azure-start
 $groups = az group list --query '[].{name:name,location:location,tags:tags}' --output json
 $groups | Set-Content (Join-Path $evidence '00-resource-groups.json')
 
-foreach ($provider in @('Microsoft.App','Microsoft.ContainerRegistry','Microsoft.OperationalInsights','Microsoft.Insights','Microsoft.SecurityInsights')) {
+foreach ($provider in @('Microsoft.App','Microsoft.ContainerRegistry','Microsoft.OperationalInsights','Microsoft.Insights','Microsoft.SecurityInsights','Microsoft.OperationsManagement')) {
   $state = az provider show --namespace $provider --query registrationState --output tsv
-  Write-Host "$provider: $state"
+  Write-Host "${provider}: $state"
 }
 
 $existing = az group exists --name $ResourceGroup

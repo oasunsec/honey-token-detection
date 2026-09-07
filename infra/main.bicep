@@ -126,6 +126,7 @@ resource dcr 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
   location: location
   kind: 'Direct'
   tags: tags
+  dependsOn: [ customTable ]
   properties: {
     description: 'Direct ingestion for normalized canary document hit events.'
     destinations: {
