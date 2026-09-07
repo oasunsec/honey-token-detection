@@ -8,6 +8,14 @@ Built an Azure-backed document-honeytoken receiver and connected its events to M
 
 **Built with:** Python, FastAPI, SQLite, Azure Table Storage, Container Apps, Bicep, Log Analytics, KQL, Microsoft Sentinel, Docker, and GitHub Actions.
 
+## Local demo
+
+Created a synthetic DOCX, opened it in desktop Word, and captured the resulting SQLite event and console-alert status. The edited recording combines a live demo console with a cropped Word capture.
+
+[![Document creation, Word, and the recorded callback](docs/demo/local-word-callback.gif)](docs/demo/local-word-callback.mp4)
+
+[Watch the MP4](docs/demo/local-word-callback.mp4) · [Recording details](docs/demo/README.md)
+
 ## Implementation
 
 - Added an Azure Table backend while retaining SQLite for local runs.
