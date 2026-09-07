@@ -1,12 +1,14 @@
-# Canary lab: screenshot walkthrough
+# Honey Token — validation walkthrough
 
-This portfolio documents an authorized defensive canary lab from baseline to release review. Four images are fresh application captures (Word and GitHub). The remaining images are clearly labelled views of saved records, design, or fresh command output. They are not original Azure portal screenshots. No before-deployment or teardown screenshot was recovered or invented. Teardown was not performed.
+Validation evidence from 7 September 2026, covering setup, deployment, document retrieval, event triage, Sentinel ingestion, and tests. Word and GitHub images are application captures. Azure images display saved API and query records, rather than the Azure portal. No teardown was performed.
 
-PII handling: account details, tenant/subscription IDs, emails, IP addresses, raw callback tokens and resource endpoints are omitted, replaced by labelled redactions, or excluded through capture boundaries. Only this public folder is included in the ZIP; raw private records and excluded screenshots are not included.
+Account details, email addresses, source IPs, tenant/subscription identifiers, callback tokens, and resource endpoints are redacted or excluded. Raw records remain outside this package.
+
+[Open the offline gallery](index.html). Image hashes are recorded in [captions.json](captions.json).
 
 ## 01. Purpose and architecture
 
-**Design summary** — Source: `ARCHITECTURE.md + CODEX_TASK.md`.
+**Design summary** — Source: `ARCHITECTURE.md`.
 
 Detect interaction in an authorized lab. A callback is a signal, not proof of exfiltration or identity.
 
@@ -46,9 +48,9 @@ HTTP 200 with receiver-only mode and Azure Table storage in the saved deployment
 
 ## 06. Word renders the synthetic decoy
 
-**Fresh Microsoft Word UI capture** — Source: `Word 16.0.20326.20132`.
+**Microsoft Word UI capture** — Source: `Word 16.0.20326.20132`.
 
-The generated DOCX renders in Word. Account controls are cropped out. Callback proof is the separately saved event in image 07; reopening for this screenshot is not claimed as a new end-to-end run.
+The generated DOCX displayed in Word. The capture excludes account controls and the cursor highlight. Image 07 contains the event recorded during the earlier local Word test.
 
 ![Word renders the synthetic decoy](06-word-decoy.png)
 
@@ -60,13 +62,13 @@ Word 16.0.20326.20132 requested the local callback under existing settings. This
 
 ![Word callback and triage](07-evidence.jpg)
 
-## 08. Durable events and duplicate suppression
+## 08. Persisted events and delivery outcomes
 
 **Archived Azure Table query** — Source: `table-events-sanitized.json`.
 
 Saved Azure Table rows retain alert and ingestion outcomes, including scanner severity. These rows are not duplicates; suppression is verified by the regression tests.
 
-![Durable events and duplicate suppression](08-evidence.jpg)
+![Persisted events and delivery outcomes](08-evidence.jpg)
 
 ## 09. Log Analytics ingestion
 
@@ -94,7 +96,7 @@ Actual saved incident response; owner, incident URL, related resource IDs and te
 
 ## 12. GitHub main CI status
 
-**Fresh capture of completed GitHub run** — Source: `Actions run 34152044446, commit 2858824`.
+**capture of completed GitHub run** — Source: `Actions run 34152044446, commit 2858824`.
 
 The completed main-branch run reports Success. Account details and navigation are excluded from the crop.
 
@@ -102,7 +104,7 @@ The completed main-branch run reports Success. Account details and navigation ar
 
 ## 13. GitHub test job
 
-**Fresh GitHub UI capture** — Source: `Actions run 34152044446`.
+**GitHub UI capture** — Source: `Actions run 34152044446`.
 
 The workflow graph shows a successful test job. This is a cropped view of the actual GitHub page.
 
@@ -110,7 +112,7 @@ The workflow graph shows a successful test job. This is a cropped view of the ac
 
 ## 14. GitHub pytest log
 
-**Fresh GitHub UI capture** — Source: `Job 101836165394 in Actions run 34152044446`.
+**GitHub UI capture** — Source: `Job 101836165394 in Actions run 34152044446`.
 
 The actual pytest log shows completed assertions and dependency warnings. The full local summary is also visible in image 15.
 
@@ -118,7 +120,7 @@ The actual pytest log shows completed assertions and dependency warnings. The fu
 
 ## 15. Local regression and SMTP delivery
 
-**Fresh verification output** — Source: `portfolio/pytest.txt + tests/test_smtp_delivery.py`.
+**verification output** — Source: `portfolio/pytest.txt + tests/test_smtp_delivery.py`.
 
 The suite includes a real ephemeral loopback SMTP sink, triage-field verification, duplicate suppression, and notification-failure isolation. No external mailbox credentials are used.
 
@@ -126,16 +128,16 @@ The suite includes a real ephemeral loopback SMTP sink, triage-field verificatio
 
 ## 16. Secret-history verification
 
-**Fresh Gitleaks output** — Source: `portfolio/gitleaks.txt`.
+**Gitleaks output** — Source: `portfolio/gitleaks.txt`.
 
 The tracked Git history scan passed. Live canary evidence remains private and ignored; a clean history does not imply the whole local disk has no secrets.
 
 ![Secret-history verification](16-evidence.jpg)
 
-## 17. Release boundary and teardown
+## 17. Limitations and teardown status
 
 **Documented final state** — Source: `VALIDATION_REPORT.md + COST_AND_TEARDOWN.md`.
 
 The repository remains private. Publishing source and operating a production service are separate decisions.
 
-![Release boundary and teardown](17-evidence.jpg)
+![Limitations and teardown status](17-evidence.jpg)

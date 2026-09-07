@@ -24,10 +24,9 @@ The DCR payload excludes the raw callback token and request path. It carries a s
 
 The Sentinel rule is scheduled and creates an incident for `CanaryHit_CL` canary-trigger rows. This is detection plumbing; it does not establish user identity, prove a human opened the document, or replace endpoint and identity telemetry.
 
-## Publication and operations
+## Deployment requirements
 
-Source publication is supported as an experimental defensive lab MVP. Production
-operations require deployment-specific ingress rate limits, retention, monitoring
+Production operations require deployment-specific ingress rate limits, retention, monitoring
 of failed delivery, and identity correlation. Do not expose local management
 through a loopback reverse proxy without an API key: the local-only fallback
 identifies the immediate peer. Only enable forwarded-header trust behind an

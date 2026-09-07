@@ -55,7 +55,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             settings.azure_dcr_immutable_id,
             settings.azure_dcr_stream_name,
         )
-    app = FastAPI(title="Canary Honeytoken MVP", version="0.1.0")
+    app = FastAPI(title="Honey Token", version="0.1.0")
     app.state.settings = settings
     app.state.db = db
     app.state.azure_ingestor = ingestor

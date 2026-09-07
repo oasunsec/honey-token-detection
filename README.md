@@ -1,13 +1,10 @@
-# Canary Honeytoken MVP
+# Honey Token
 
-A small self-hosted deception project for detecting interaction with sensitive-looking decoy files in an **authorized environment**.
+A self-hosted document honeytoken detector for detecting interaction with sensitive-looking decoy files in an **authorized environment**.
 
 The project creates a unique callback token, associates it with a decoy such as `Synthetic_Forecast.docx`, records callback telemetry, performs lightweight triage, suppresses duplicate notifications, and sends an alert to the console or email.
 
-Publication status: **ready for public review as an experimental lab MVP**.
-Word on Windows retrieved a locally generated DOCX callback in the controlled
-test; this is not a guarantee across Office policies. See [validation results](VALIDATION_REPORT.md)
-and the [compatibility matrix](COMPATIBILITY.md).
+Tested with a generated DOCX in Word on Windows and, separately, with controlled HTTPS callbacks to an Azure receiver and Microsoft Sentinel. See the [validation results](VALIDATION_REPORT.md) and [compatibility matrix](COMPATIBILITY.md) for the test conditions.
 
 ## What it is
 
@@ -27,7 +24,7 @@ FastAPI token endpoint
 
 This is a **detective deception control**. It does not replace encryption, access control, DLP, EDR, removable-media policy, or audit logging.
 
-## Current MVP
+## Features
 
 - Unique cryptographically random token per decoy
 - Public callback endpoint returning a transparent 1x1 GIF
@@ -46,7 +43,7 @@ This is a **detective deception control**. It does not replace encryption, acces
 - Automated tests
 - Docker support
 
-## Important limitation
+## Detection limits
 
 A callback-based document token **does not guarantee detection of every file open**.
 
@@ -275,51 +272,16 @@ Then use `http://localhost:8000`.
 pytest -q
 ```
 
-The test suite covers token triggering, duplicate suppression, scanner triage, token disabling, triage-derived console alerts, DOCX relationship generation and filename path validation.
+The 16 tests cover callbacks, duplicate suppression, scanner triage, token disabling, management authentication, receiver routing, DOCX generation, filename validation, event redaction, local SMTP delivery, and delivery-failure isolation.
 
-## Suggested GitHub roadmap
+## Further work
 
-### v0.1 — MVP
-Current repository.
-
-### v0.2 — Secure management plane
-- SSO or a managed secret store for management credentials
-- TLS deployment guidance
-- role separation
-- audit trail for token creation/disable actions
-
-### v0.3 — Better triage
-- trusted scanner allowlist
-- source-network context
-- token criticality
-- enrichment adapters
-- confidence score
-
-### v0.4 — SOC integration
-- Splunk HEC output
-- Microsoft Sentinel/Log Analytics output
-- generic webhook adapter
-- normalized JSON schema
-
-### v0.5 — Deception management
-- multiple token types
-- ownership/expiry
-- bulk token generation
-- token health testing
-- dashboard
-
-## What this project demonstrates
-
-For a security-engineering portfolio, this repo shows:
-
-- deception/honeytoken concepts;
-- FastAPI service development;
-- event normalization;
-- basic detection/triage engineering;
-- false-positive handling;
-- alerting;
-- security limitations and threat-model thinking;
-- a path to SIEM integration.
+- Automatic retry of failed notifications and SIEM delivery
+- Atomic duplicate suppression across receiver instances
+- Token ownership, expiry, and lifecycle audit records
+- Scanner allowlists and identity/endpoint enrichment
+- Ingress rate limits and evidence retention controls
+- Broader Word and external-content policy testing
 
 ## Authorized use only
 
@@ -329,6 +291,6 @@ Deploy decoys only in systems and networks you own or are authorized to monitor.
 
 MIT
 
-## Portfolio evidence
+## Validation evidence
 
 The [numbered screenshot walkthrough](docs/evidence/public/README.md) covers the baseline, deployment, decoy, triage, SIEM, tests, and release boundary. Every image identifies whether it is a fresh application capture or a view of archived evidence. Sensitive identifiers are excluded. The [offline gallery](docs/evidence/public/index.html) opens locally with the image files alongside it.

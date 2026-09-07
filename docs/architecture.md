@@ -73,4 +73,4 @@ Encryption at rest
 + deception canaries
 ```
 
-The canary adds a high-signal detective control but does not provide confidentiality by itself.
+The honeytoken adds a detection signal but does not provide confidentiality by itself.

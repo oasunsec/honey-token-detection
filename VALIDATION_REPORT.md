@@ -4,15 +4,15 @@
 **Environment:** Windows 11, Python 3.13.14, Azure `southcentralus`, private GitHub repository
 **Scope:** Authorized defensive canary validation from the existing MVP codebase
 
-## Executive result
+## Results
 
-The cloud validation path now proves the requested core flow end to end:
+Controlled HTTP requests exercised the cloud receiver path:
 
-`DOCX callback -> public HTTPS Container App -> Azure Table Storage event -> triage -> console alert decision -> DCR ingestion -> CanaryHit_CL -> scheduled Sentinel rule -> Sentinel incident`
+`Controlled HTTP callback -> public HTTPS Container App -> Azure Table Storage event -> triage -> console alert decision -> DCR ingestion -> CanaryHit_CL -> scheduled Sentinel rule -> Sentinel incident`
 
 The Azure receiver returned HTTP 200 with the transparent GIF, persisted the event in the project Table Storage, ran the existing triage code, emitted the normal console alert, sent a normalized record through the resource-specific DCR endpoint, and produced a Sentinel incident. The receiver also preserved evidence when the first DCR configuration was wrong: that event remains durable with `sentinel_status=failed` and a bounded DNS error. The endpoint was corrected to use the DCR endpoint emitted by Azure, and subsequent events ingested successfully.
 
-The repository remains private. No real SMTP credentials, Azure storage keys, registry admin credentials, or callback token were committed. The original local source copies were not modified or deleted.
+Word retrieval was tested separately against a local loopback receiver. A Word-to-Azure test was not performed.
 
 ## Tests and observed results
 
@@ -39,7 +39,7 @@ The repository remains private. No real SMTP credentials, Azure storage keys, re
 | Local SMTP test | Passed against an ephemeral loopback sink through the normal triage and alert path; no external mailbox or credential used |
 | Azure SMTP alert | Not configured; Azure validation used console alerts and recorded that limitation |
 
-The first unmodified local `pytest -q` attempt previously hit a host ACL error while pytest scanned `C:\Users\oasun\AppData\Local\Temp\pytest-of-oasun`. The repository uses an ignored `.pytest-tmp/` root so the documented command runs reliably on this host. That was an environment failure, not an application assertion failure.
+An initial pytest run failed during discovery because the host denied access to its temporary directory. The ignored `.pytest-tmp/` directory and explicit `tests/` discovery scope resolved collection; application assertions then passed.
 
 ## Cloud flow evidence
 
@@ -61,7 +61,7 @@ The local SMTP test used an ephemeral loopback server that accepted a message fo
 
 ## DOCX behavior
 
-The generated DOCX package was inspected as an OOXML ZIP. Its external relationship targeted the token-specific callback URL and used `TargetMode="External"`. The earlier run did not execute a viewer. During publication validation, Word was found at its Office16 installation path and opened through its UI. Version 16.0.20326.20132 rendered the synthetic document and requested the token URL at 2026-09-07T18:27:35.267154+00:00. The recorded User-Agent was `Mozilla/4.0 (compatible; ms-office; MSOffice 16)`, severity was high, and console alert status was sent. This was a local-file to loopback test under existing settings, not a Protected View or cloud Word test. Protected View, Office external-content policy, proxies, firewalls, offline hosts, and viewer behavior can prevent a callback; no control was bypassed.
+The generated DOCX package was inspected as an OOXML ZIP. Its external relationship targeted the token-specific callback URL and used `TargetMode="External"`. Word version 16.0.20326.20132 rendered the synthetic document and requested the token URL at 2026-09-07T18:27:35.267154+00:00. The recorded User-Agent was `Mozilla/4.0 (compatible; ms-office; MSOffice 16)`, severity was high, and console alert status was sent. This was a local-file to loopback test under existing settings, not a Protected View or cloud Word test. Protected View, Office external-content policy, proxies, firewalls, offline hosts, and viewer behavior can prevent a callback; no control was bypassed.
 
 ## False positives and limitations
 
@@ -82,11 +82,11 @@ Remaining work before a production or broadly exposed deployment includes a real
 
 ## Git and secret-history review
 
-The working tree, tracked paths, and commit history were checked with `git status`, `git diff --check`, history-aware pattern searches, and review of ignored classes. Runtime databases, raw tokens, DOCX evidence, logs, `.env` files, virtual environments, caches, deployment parameter files, and `evidence-private/` are ignored and absent from the tracked set. Publication follow-up used Gitleaks v8.30.1, downloaded from its GitHub release with the published SHA-256 checked. All 18 pre-follow-up commits and the publication file set scanned clean. A full local-directory scan found six dependency-code matches (emulator key/type names, including bytecode) and one live seeded canary token in ignored `evidence-private/16-seeded-canary.json`. That operational token is private evidence, absent from Git, and must not be distributed. No claim is made that the entire local disk is secret-free.
+Gitleaks v8.30.1 found no secrets in the tracked history or public evidence files during the 2026-09-07 review. Runtime databases, raw callbacks, generated decoys, logs, `.env` files, and `evidence-private/` are excluded from Git. Private runtime records contain live tokens and are excluded from the downloadable evidence package.
 
 ## GitHub result
 
-The repository is private at [oasunsec/canary-honeytoken-detection](https://github.com/oasunsec/canary-honeytoken-detection). The earlier all-jobs failure was a test-collection import-path problem (`ModuleNotFoundError: No module named 'app'`); `pytest.ini` now sets `pythonpath = .`, the feature branch run for commit `7427aab` passed all jobs in [Actions run 34148126782](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34148126782), and the completed validation/documentation commit `ea86b4b` passed all jobs in [Actions run 34150337343](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34150337343).
+The repository remains private at [oasunsec/canary-honeytoken-detection](https://github.com/oasunsec/canary-honeytoken-detection). The screenshot-package checkpoint `fd06b0a` passed [GitHub Actions run 34154930533](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34154930533). Later runs are listed in [Actions](https://github.com/oasunsec/canary-honeytoken-detection/actions).
 
 ## Teardown
 
@@ -94,13 +94,13 @@ The project-specific teardown script is prepared but has not been run. It requir
 
 ## Recommendation
 
-Continue: the source is ready for public review as an experimental defensive lab MVP. The original definition of done allows documented viewer limitations and safe local SMTP; it does not require production certification or real cloud email credentials. Word retrieval is now observed, real loopback SMTP is automated in regression tests, and automated history scanning is complete. Public callback routing and scanner false positives are inherent documented properties, not guarantees of malicious activity. Keep GitHub private until the owner makes the separate publication decision. Production readiness is not claimed.
+Continue as an experimental detection project. The local Word callback, SMTP sink test, and cloud receiver-to-Sentinel path passed under the conditions above. Production deployment still needs retry handling, ingress controls, retention, and broader viewer testing. Repository visibility remains private pending the owner's publication decision.
 
 ## Final release status
 
 `READY_FOR_PUBLIC_REVIEW`
 
-## Publication follow-up (2026-09-07)
+## Fixes verified on 2026-09-07
 
 - Baseline: 13 tests passed. Final local suite: 16 passed, with two upstream
   TestClient deprecation warnings. The real loopback SMTP integration test
@@ -120,7 +120,3 @@ Continue: the source is ready for public review as an experimental defensive lab
   run. This follow-up did not redeploy cloud resources or configure cloud SMTP.
 - Automatic retries, distributed atomic deduplication, retention, WAF/rate limits,
   and tamper-evident storage remain operational limitations of this MVP.
-
-Final GitHub CI and synchronization are verified after the publication commit;
-see the Actions run for the branch head. This report intentionally does not
-claim that a future documentation commit has already passed CI.
