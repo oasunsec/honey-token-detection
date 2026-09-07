@@ -1,10 +1,10 @@
-# Run Honey Token
+# Run locally
 
-Run these commands from the repository root. The local example uses synthetic documents and a loopback receiver. In Windows PowerShell, use `curl.exe` wherever the Bash examples use `curl`.
+Run these commands from the repository root. The local walkthrough uses synthetic documents and a loopback receiver. In Windows PowerShell, use `curl.exe` where the Bash examples use `curl`.
 
 ## Requirements
 
-- Python 3.12 or 3.13 with `pip` and `venv`. CI runs on 3.12; the recorded local run used 3.13.
+- Python 3.12 or 3.13 with `pip` and `venv`. CI uses 3.12; the documented local verification used 3.13.
 - Microsoft Word for the document-open test. The receiver and automated tests can run without Word.
 - For Azure deployment: PowerShell, Azure CLI, and an account permitted to create the project resources and role assignments.
 - Docker with Compose only for the container option.
@@ -62,10 +62,10 @@ Expected:
 {"status":"ok","receiver_only":false,"receiver_version":"local","storage_backend":"sqlite"}
 ```
 
-### 4. Create a financial-document decoy
+### 4. Create a synthetic DOCX decoy
 
 ```text
-python -m app.cli create --name "Finance bait" --filename "Synthetic_Forecast.docx" --format docx
+python -m app.cli create --name "Synthetic forecast" --filename "Synthetic_Forecast.docx" --format docx
 ```
 
 The command writes the document under `decoys/` and returns its path, token ID, and callback URL. The CLI uses the configured database directly; it does not call the management API.
@@ -75,7 +75,7 @@ The command writes the document under `decoys/` and returns its path, token ID, 
 Call the callback URL returned by the CLI:
 
 ```bash
-curl -A "Lab-Validation" "http://127.0.0.1:8000/t/YOUR_TOKEN/pixel.gif" --output pixel.gif
+curl -A "HoneyToken-Demo" "http://127.0.0.1:8000/t/YOUR_TOKEN/pixel.gif" --output pixel.gif
 ```
 
 You should see a console alert and an event in:
@@ -92,7 +92,7 @@ http://127.0.0.1:8000/docs
 
 ### 6. Open the document
 
-Open the generated file on the same machine as the loopback receiver. If the viewer loads external content, its pixel request will appear in `/api/events`. Viewer coverage is recorded in [COMPATIBILITY.md](../COMPATIBILITY.md). Leave Office and endpoint security policies in place.
+Open the generated file on the machine running the receiver. If the viewer loads external content, its pixel request will appear in `/api/events`. Viewer behavior varies with Office and endpoint policies; see [COMPATIBILITY.md](../COMPATIBILITY.md) for the tested paths.
 
 ## Azure deployment
 
@@ -150,7 +150,7 @@ Do not commit credentials to Git.
 Example email subject:
 
 ```text
-[CANARY] Synthetic_Forecast.docx triggered (HIGH)
+[HONEY-TOKEN] Synthetic_Forecast.docx triggered (HIGH)
 ```
 
 The body includes a short hashed canary identifier, filename, timestamp, source IP, User-Agent, triage label and duplicate state. The raw callback token is not placed in the alert body. Each persisted event records `alert_status` as `sent`, `suppressed`, `disabled`, or `failed`; failed delivery includes a bounded error message for diagnosis.
@@ -178,10 +178,10 @@ POST /api/tokens
 Content-Type: application/json
 
 {
-  "name": "Finance bait",
+  "name": "Synthetic forecast",
   "filename": "Synthetic_Forecast.docx",
   "severity": "high",
-  "notes": "Placed in authorized finance deception lab"
+  "notes": "Generated for authorized testing"
 }
 ```
 

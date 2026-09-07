@@ -66,7 +66,7 @@
     "content": "{\n  \"occurred_at\": \"2026-09-07T18:27:35.267154+00:00\",\n  \"source_ip\": \"[IP REDACTED]\",\n  \"user_agent\": \"Mozilla/4.0 (compatible; ms-office; MSOffice 16)\",\n  \"event_type\": \"canary_trigger\",\n  \"triage_label\": \"Honeytoken trigger - potential unauthorized access\",\n  \"severity\": \"high\",\n  \"duplicate\": 0,\n  \"alert_status\": \"sent\",\n  \"filename\": \"Synthetic_Forecast.docx\"\n}",
     "meaning": "Captured the Office User-Agent and high-severity event when Word requested the loopback pixel.",
     "image": "07-evidence.jpg",
-    "sha256": "fb479d693ec5b97de24f7e82faeb45baebb63556697240a3c4a5950349afce96"
+    "sha256": "aee13137a4edb4afcce40bcead0a4c7879556264aeb875df55561a1e53658f75"
   },
   {
     "number": "08",

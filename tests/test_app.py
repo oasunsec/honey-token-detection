@@ -24,7 +24,7 @@ def test_token_trigger_and_dedupe(tmp_path: Path):
     client = make_client(tmp_path)
     token = client.post(
         "/api/tokens",
-        json={"name": "Finance bait", "filename": "Synthetic_Forecast.docx", "severity": "high"},
+        json={"name": "Synthetic forecast", "filename": "Synthetic_Forecast.docx", "severity": "high"},
     ).json()
 
     first = client.get(f"/t/{token['id']}/pixel.gif", headers={"user-agent": "Mozilla/5.0"})
@@ -189,7 +189,7 @@ def test_failed_alert_is_persisted(monkeypatch, tmp_path: Path):
 def test_email_alert_content(tmp_path: Path):
     from app.alerts import render_alert
 
-    token = {"id": "abc123", "name": "Finance bait", "filename": "Synthetic_Forecast.docx"}
+    token = {"id": "abc123", "name": "Synthetic forecast", "filename": "Synthetic_Forecast.docx"}
     event = {
         "occurred_at": "2026-08-31T00:00:00+00:00",
         "source_ip": "203.0.113.10",
