@@ -23,3 +23,17 @@ The public Container App runs with `CANARY_RECEIVER_ONLY=true`: health and callb
 The DCR payload excludes the raw callback token and request path. It carries a short SHA-256 canary identifier, artifact name, source metadata, triage classification, duplicate decision, alert outcome, and event ID. Raw tokens and raw evidence must remain in ignored, access-controlled local storage.
 
 The Sentinel rule is scheduled and creates an incident for `CanaryHit_CL` canary-trigger rows. This is detection plumbing; it does not establish user identity, prove a human opened the document, or replace endpoint and identity telemetry.
+
+## Publication and operations
+
+Source publication is supported as an experimental defensive lab MVP. Production
+operations require deployment-specific ingress rate limits, retention, monitoring
+of failed delivery, and identity correlation. Do not expose local management
+through a loopback reverse proxy without an API key: the local-only fallback
+identifies the immediate peer. Only enable forwarded-header trust behind an
+explicitly trusted proxy that replaces client-supplied forwarding headers.
+
+Docker build context is allowlisted to application Python files, requirements,
+and the Dockerfile. Compose binds to loopback. The container disables Uvicorn
+access logs because callback paths carry live tokens; apply equivalent redaction
+at any proxy. Live tokens in ignored private evidence must never be published.

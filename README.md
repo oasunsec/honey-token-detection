@@ -4,6 +4,11 @@ A small self-hosted deception project for detecting interaction with sensitive-l
 
 The project creates a unique callback token, associates it with a decoy such as `Synthetic_Forecast.docx`, records callback telemetry, performs lightweight triage, suppresses duplicate notifications, and sends an alert to the console or email.
 
+Publication status: **ready for public review as an experimental lab MVP**.
+Word on Windows retrieved a locally generated DOCX callback in the controlled
+test; this is not a guarantee across Office policies. See [validation results](VALIDATION_REPORT.md)
+and the [compatibility matrix](COMPATIBILITY.md).
+
 ## What it is
 
 ```text
@@ -85,7 +90,7 @@ pip install -r requirements.txt
 ### 3. Start the API
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --no-access-log
 ```
 
 Check:
@@ -97,7 +102,7 @@ curl http://127.0.0.1:8000/health
 Expected:
 
 ```json
-{"status":"ok"}
+{"status":"ok","receiver_only":false,"receiver_version":"local","storage_backend":"sqlite"}
 ```
 
 ### 4. Create a financial-document decoy

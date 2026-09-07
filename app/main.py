@@ -71,7 +71,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="Not found")
         if settings.management_api_key:
             supplied = request.headers.get("x-canary-api-key", "")
-            if not supplied or not secrets.compare_digest(supplied, settings.management_api_key):
+            if not supplied or not secrets.compare_digest(supplied.encode("utf-8"), settings.management_api_key.encode("utf-8")):
                 raise HTTPException(status_code=401, detail="Management API authentication required")
             return
 
@@ -175,12 +175,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             severity=severity,
             duplicate=duplicate,
         )
+        alert_error = ""
         try:
             alert_status = send_alert(settings, event, token)
         except Exception as exc:
-            db.set_alert_status(event["id"], "failed", str(exc)[:500])
-            raise
-        db.set_alert_status(event["id"], alert_status)
+            alert_status = "failed"
+            alert_error = str(exc)[:500]
+        db.set_alert_status(event["id"], alert_status, alert_error)
         if ingestor:
             try:
                 event["alert_status"] = alert_status
@@ -188,6 +189,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 db.set_sentinel_status(event["id"], "sent")
             except Exception as exc:
                 db.set_sentinel_status(event["id"], "failed", str(exc)[:500])
+        else:
+            db.set_sentinel_status(event["id"], "disabled")
         gif = base64.b64decode(TRANSPARENT_GIF_B64)
         return Response(content=gif, media_type="image/gif", headers={"Cache-Control": "no-store, no-cache, must-revalidate"})
 

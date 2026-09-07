@@ -1,6 +1,6 @@
 # Testing
 
-Local regression tests run with `\.venv\Scripts\pytest.exe -q` and cover token callbacks, duplicate suppression, scanner triage, disabled tokens, DOCX external relationships, management authentication, receiver-only routing, public event redaction, console/SMTP rendering, and persisted SMTP failures.
+Local regression tests run with `.\.venv\Scripts\pytest.exe -q` and cover token callbacks, duplicate suppression, scanner triage, disabled tokens, DOCX external relationships, management authentication, receiver-only routing, public event redaction, console/SMTP rendering, and persisted SMTP failures.
 
 The Azure validation sequence is:
 
@@ -11,3 +11,10 @@ The Azure validation sequence is:
 5. Repeat from a second controlled endpoint and record duplicate/scanner behavior.
 
 Viewer-side callback behavior is recorded as tested, blocked, partial, or not tested. No Office or endpoint policy is bypassed.
+
+The suite includes actual SMTP delivery to a threaded ephemeral loopback sink,
+checks triage fields in the received message, and verifies duplicate suppression.
+An SMTP outage must preserve a failed status, still return the GIF, and still
+attempt independently configured Sentinel ingestion. An absent Sentinel adapter
+is recorded as disabled. Run `pytest -q`; collection is restricted to `tests/`
+so ignored evidence copies do not become tests.

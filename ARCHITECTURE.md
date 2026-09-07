@@ -22,3 +22,10 @@ flowchart TD
 ```
 
 The callback persists a hit before attempting email or Azure Monitor delivery. The Azure receiver does not expose management routes; token and decoy provisioning can happen locally with the same Azure Table backend using the operator's `DefaultAzureCredential`.
+
+Notification transports are independent: an SMTP failure is persisted and does
+not skip Azure ingestion or turn a successfully recorded hit into an HTTP 500.
+No configured ingestion adapter is recorded as disabled. Delivery remains
+synchronous and there is no automatic retry worker; operators must inspect
+failed delivery states. Concurrent deduplication is best effort, not an
+exactly-once delivery guarantee.

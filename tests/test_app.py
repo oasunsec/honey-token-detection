@@ -40,6 +40,7 @@ def test_token_trigger_and_dedupe(tmp_path: Path):
     assert events[1]["event_type"] == "canary_trigger"
     assert events[0]["alert_status"] == "suppressed"
     assert events[1]["alert_status"] == "disabled"
+    assert events[1]["sentinel_status"] == "disabled"
 
 
 def test_scanner_triage(tmp_path: Path):
@@ -180,7 +181,7 @@ def test_failed_alert_is_persisted(monkeypatch, tmp_path: Path):
     ).json()
     response = client.get(f"/t/{token['id']}/pixel.gif")
     event = client.get("/api/events").json()[0]
-    assert response.status_code == 500
+    assert response.status_code == 200
     assert event["alert_status"] == "failed"
     assert "safe test SMTP failure" in event["alert_error"]
 
@@ -201,3 +202,40 @@ def test_email_alert_content(tmp_path: Path):
     assert "Synthetic_Forecast.docx" in subject
     assert "203.0.113.10" in body
     assert "potential unauthorized access" in body
+
+
+def test_smtp_failure_does_not_skip_sentinel(monkeypatch, tmp_path):
+    from app import main
+    captured = []
+
+    class Ingestor:
+        def __init__(self, *args):
+            pass
+
+        def publish(self, event, token, version):
+            captured.append(dict(event))
+
+    def fail(*args):
+        raise OSError("test notification outage")
+
+    monkeypatch.setattr(main, "AzureMonitorIngestor", Ingestor)
+    monkeypatch.setattr(main, "send_alert", fail)
+    client = TestClient(create_app(Settings(
+        db_path=str(tmp_path / "isolation.db"),
+        azure_dcr_endpoint="https://example.test", azure_dcr_immutable_id="test",
+    )))
+    token = client.post("/api/tokens", json={"name": "Isolation", "filename": "Test.docx"}).json()
+    response = client.get(f"/t/{token['id']}/pixel.gif")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "image/gif"
+    event = client.get("/api/events").json()[0]
+    assert event["alert_status"] == "failed"
+    assert event["sentinel_status"] == "sent"
+    assert captured[0]["alert_status"] == "failed"
+    assert captured[0]["triage_label"] == event["triage_label"]
+
+
+def test_non_ascii_management_header_is_rejected(tmp_path):
+    client = make_client(tmp_path, management_api_key="lab-key")
+    response = client.get("/api/events", headers=[(b"x-canary-api-key", b"\xff")])
+    assert response.status_code == 401
