@@ -2,6 +2,20 @@
 
 Run these commands from the repository root. The local example uses synthetic documents and a loopback receiver. In Windows PowerShell, use `curl.exe` wherever the Bash examples use `curl`.
 
+## Requirements
+
+- Python 3.12 or 3.13 with `pip` and `venv`. CI runs on 3.12; the recorded local run used 3.13.
+- Microsoft Word for the document-open test. The receiver and automated tests can run without Word.
+- For Azure deployment: PowerShell, Azure CLI, and an account permitted to create the project resources and role assignments.
+- Docker with Compose only for the container option.
+
+Get the source and enter the repository before continuing:
+
+```text
+git clone https://github.com/oasunsec/canary-honeytoken-detection.git
+cd canary-honeytoken-detection
+```
+
 ## Quick start
 
 ### 1. Create a virtual environment
@@ -54,7 +68,7 @@ Expected:
 python -m app.cli create --name "Finance bait" --filename "Synthetic_Forecast.docx" --format docx
 ```
 
-The command returns a token ID, callback URL and generated decoy path.
+The command writes the document under `decoys/` and returns its path, token ID, and callback URL. The CLI uses the configured database directly; it does not call the management API.
 
 ### 5. Send a callback
 
@@ -96,7 +110,7 @@ The scripts create billable resources. [AZURE_DEPLOYMENT.md](../AZURE_DEPLOYMENT
 
 ## Management API protection
 
-The callback route stays public because the token is the tripwire identifier. Management routes under `/api/*` are limited to loopback clients when `CANARY_MANAGEMENT_API_KEY` is empty. Before remote use, set a strong value and send it as `X-Canary-API-Key`:
+The callback route stays public so document viewers can request it. Management routes under `/api/*` are limited to loopback clients when `CANARY_MANAGEMENT_API_KEY` is empty. Before remote use, set a strong value and send it as `X-Canary-API-Key`:
 
 ```text
 CANARY_MANAGEMENT_API_KEY=use-a-secret-from-your-secret-store

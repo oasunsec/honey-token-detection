@@ -1,48 +1,41 @@
 # Honey Token
 
-Extended a local Python document-honeytoken service into an Azure receiver connected to Microsoft Sentinel. Added durable cloud storage, managed-identity ingestion, and a scheduled detection rule, then traced controlled callbacks through to a Sentinel incident.
+Built an Azure-backed document-honeytoken receiver and connected its events to Microsoft Sentinel. The work extended a local Python service with durable storage, managed-identity ingestion, and a scheduled detection rule. A separate Word test confirmed that the generated DOCX requested its local callback.
 
-The work also covered the document side: a generated DOCX opened in Word and requested its local callback. That test ran separately from the Azure callback test.
+[Case study](CASE_STUDY.md) · [Screenshots](docs/evidence/public/README.md) · [Run locally](docs/SETUP.md) · [Architecture](ARCHITECTURE.md)
 
 [![Honey Token: separate local Word and Azure-to-Sentinel event paths](docs/diagrams/tested-event-paths.png)](docs/diagrams/tested-event-paths.png)
 
-**Stack:** Python, FastAPI, SQLite, Azure Table Storage, Container Apps, Bicep, Log Analytics, KQL, Microsoft Sentinel, Docker, GitHub Actions.
+**Built with:** Python, FastAPI, SQLite, Azure Table Storage, Container Apps, Bicep, Log Analytics, KQL, Microsoft Sentinel, Docker, and GitHub Actions.
 
-## Work completed
+## Implementation
 
-- Added Azure Table Storage while retaining the local SQLite backend.
-- Deployed the receiver with management routes disabled and managed-identity access to ACR, Table Storage, and the Data Collection Rule.
-- Fixed a failed ingestion endpoint and traced subsequent events into `CanaryHit_CL` and a high-severity Sentinel incident.
-- Exercised scanner classification, duplicate suppression, token revocation, and local SMTP delivery.
-- Fixed SMTP failure handling so recorded callbacks still returned the pixel and attempted Sentinel ingestion.
-- Added regression coverage for notification failures and malformed management credentials; the suite reached 16 passing tests.
-- Restricted the Docker build context, bound Compose to loopback, and disabled access logs that contained callback tokens.
+- Added an Azure Table backend while retaining SQLite for local runs.
+- Deployed a receiver with public callback routes, disabled management routes, and scoped managed-identity permissions.
+- Connected stored events to Log Analytics and Sentinel; corrected the ingestion endpoint after the first delivery failed.
+- Fixed SMTP failure handling and malformed-key errors, and expanded the regression suite from nine to 16 tests.
+- Restricted the Docker build context, bound Compose to loopback, and disabled access logs containing callback tokens.
 
-## Results
+## Recorded results
 
-Word 16.0.20326.20132 retrieved the local document's callback. The receiver stored the event, assigned high severity, and recorded a console alert. In the separate Azure run, controlled HTTPS requests produced stored events, Log Analytics rows, and a Sentinel incident. A repeated request remained in storage while its notification was suppressed. A local SMTP sink received one email for two callbacks within the suppression window.
+| Path exercised | Result | Evidence |
+| --- | --- | --- |
+| Local Word document | Word requested the pixel; the receiver stored a high-severity event and a sent console alert | [Word callback](docs/evidence/public/README.md#07-word-callback-and-triage) |
+| Controlled Azure callback | The event reached Table Storage and Log Analytics; the scheduled rule created a high-severity incident | [Sentinel incident](docs/evidence/public/README.md#11-sentinel-incident) |
+| Repeat callback and local SMTP | Both callbacks were stored; one email was delivered within the suppression window | [Test results](TESTING.md) |
 
-The [case study](CASE_STUDY.md) follows the implementation and the failures fixed along the way. The [screenshot walkthrough](docs/evidence/public/README.md) contains the application captures and sanitized records from the work.
+The Word and Azure paths were tested separately. [Viewer coverage](COMPATIBILITY.md) and [operational limits](LIMITATIONS.md) record the scope of those results.
 
-The project focused on document callbacks and event handling. [Operational limits](LIMITATIONS.md) and [viewer coverage](COMPATIBILITY.md) describe the boundaries of the work.
+## Documentation
 
-## Repository guide
-
-| File | Contents |
+| Topic | Links |
 | --- | --- |
-| [Case study](CASE_STUDY.md) | Build sequence, fixes, and outcomes |
-| [Architecture](ARCHITECTURE.md) | Local and cloud paths used in the work |
-| [Azure deployment](AZURE_DEPLOYMENT.md) | Resources and permissions deployed |
-| [Sentinel](SENTINEL.md) | Ingestion failure, rule configuration, and incident |
-| [Tests](TESTING.md) | Scenarios exercised and recorded results |
-| [Setup](docs/SETUP.md) | Commands, API examples, and SMTP configuration |
-| [Security](SECURITY.md) | Controls implemented and deployment constraints |
-| [Compatibility](COMPATIBILITY.md) | Document viewer results |
-| [Cost and teardown](COST_AND_TEARDOWN.md) | Resource lifecycle and cleanup command |
-| [Cloud components](docs/CLOUD_COMPONENTS.md) | Implementation inventory |
+| Build and investigation | [Case study](CASE_STUDY.md), [screenshots](docs/evidence/public/README.md), [starting point](docs/BASELINE.md) |
+| Implementation | [Architecture](ARCHITECTURE.md), [Azure deployment](AZURE_DEPLOYMENT.md), [Sentinel rule and queries](SENTINEL.md) |
+| Run and maintain | [Setup](docs/SETUP.md), [tests](TESTING.md), [security](SECURITY.md), [cost and teardown](COST_AND_TEARDOWN.md) |
 
-The lab used synthetic documents. Deployment is limited to systems the operator owns or is authorized to monitor.
+Examples use synthetic documents and controlled test systems. Use is limited to environments the operator owns or has permission to monitor.
 
 ## License
 
-MIT
+[MIT](LICENSE)

@@ -10,4 +10,4 @@ The repeat event reached Log Analytics with `FirstHit=false`, `RepeatCount=1`, a
 
 The rule selected all `canary_trigger` rows and used its configured high severity, including for scanner and repeat rows. Receiver email/console suppression did not filter the Sentinel query.
 
-The queries used for inspection are in [docs/kql](docs/kql): `canary-hits.kql`, `canary-first-hits.kql`, and `canary-repeat-hits.kql`. Saved query and incident records appear in [screenshots 09–11](docs/evidence/public/README.md#09-log-analytics-ingestion).
+The inspection queries are [all hits](docs/kql/canary-hits.kql), [first hits](docs/kql/canary-first-hits.kql), and [repeat hits](docs/kql/canary-repeat-hits.kql). Saved query and incident records appear in [screenshots 09–11](docs/evidence/public/README.md#09-log-analytics-ingestion).

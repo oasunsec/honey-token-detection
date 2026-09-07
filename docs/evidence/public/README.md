@@ -1,10 +1,14 @@
-# Honey Token — validation walkthrough
+# Honey Token — screenshot walkthrough
 
 Project walkthrough recorded on 7 September 2026, covering setup, deployment, document retrieval, event triage, Sentinel ingestion, and tests. Word and GitHub images are application captures. Azure images display saved API and query records, rather than the Azure portal. No teardown was performed.
 
 Account details, email addresses, source IPs, tenant/subscription identifiers, callback tokens, and resource endpoints are redacted or excluded. Raw records remain outside this package.
 
 [Open the offline gallery](index.html). Image hashes are recorded in [captions.json](captions.json).
+
+## Browse the evidence
+
+[Deployment](#03-infrastructure-deployment) · [Word callback](#07-word-callback-and-triage) · [Sentinel incident](#11-sentinel-incident) · [Tests](#15-local-regression-and-smtp-delivery)
 
 ## 01. Purpose and architecture
 
