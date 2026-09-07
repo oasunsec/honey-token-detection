@@ -36,6 +36,8 @@ This is a **detective deception control**. It does not replace encryption, acces
 - SMTP email alerts as an option
 - Token disable endpoint
 - Event API for investigation
+- Optional API-key protection for management endpoints, with loopback-only fallback
+- Persisted alert outcome and delivery error evidence
 - Automated tests
 - Docker support
 
@@ -129,6 +131,20 @@ Open interactive API docs at:
 http://127.0.0.1:8000/docs
 ```
 
+### Management API protection
+
+The callback route stays public because the token is the tripwire identifier. Management routes under `/api/*` are limited to loopback clients when `CANARY_MANAGEMENT_API_KEY` is empty. Before remote use, set a strong value and send it as `X-Canary-API-Key`:
+
+```text
+CANARY_MANAGEMENT_API_KEY=use-a-secret-from-your-secret-store
+```
+
+```bash
+curl -H "X-Canary-API-Key: $CANARY_MANAGEMENT_API_KEY" http://127.0.0.1:8000/api/events
+```
+
+Use TLS at a trusted reverse proxy for remote deployments. Never put the key in source control, a decoy, or a URL.
+
 ### 6. Test the DOCX in a controlled lab
 
 Open the generated file on a lab endpoint that can reach the callback server. Record whether the viewer actually requests the external resource. If it does not, treat that as an observed product-control limitation rather than trying to bypass the viewer's security controls.
@@ -156,7 +172,7 @@ Example email subject:
 [CANARY] Synthetic_Forecast.docx triggered (HIGH)
 ```
 
-The body includes the token, filename, timestamp, source IP, User-Agent, triage label and duplicate state.
+The body includes the token, filename, timestamp, source IP, User-Agent, triage label and duplicate state. Each persisted event records `alert_status` as `sent`, `suppressed`, `disabled`, or `failed`; failed delivery includes a bounded error message for diagnosis.
 
 ## Triage logic
 
@@ -220,6 +236,8 @@ Content-Type: application/json
 GET /api/events
 ```
 
+When management authentication is enabled, include `X-Canary-API-Key` on every `/api/*` request.
+
 ### Disable token
 
 ```http
@@ -248,7 +266,7 @@ The test suite covers token triggering, duplicate suppression, scanner triage, t
 Current repository.
 
 ### v0.2 — Secure management plane
-- API-key or SSO authentication for management endpoints
+- SSO or a managed secret store for management credentials
 - TLS deployment guidance
 - role separation
 - audit trail for token creation/disable actions

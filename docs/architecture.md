@@ -5,7 +5,7 @@
 The project has two different surfaces:
 
 1. **Trigger plane** — `/t/{token_id}/pixel.gif` must be reachable by the environment being tested. It intentionally does not require authentication because the token itself is the tripwire identifier.
-2. **Management plane** — `/api/*` creates tokens, lists telemetry and disables tokens. The MVP leaves this open for local lab use. Authentication is required before internet-facing deployment.
+2. **Management plane** — `/api/*` creates tokens, lists telemetry and disables tokens. It accepts loopback clients only when `CANARY_MANAGEMENT_API_KEY` is empty; remote use requires the `X-Canary-API-Key` header. Authentication and TLS remain deployment requirements for internet-facing use.
 
 ## Event schema
 
@@ -20,6 +20,8 @@ Each trigger records:
 - triage label;
 - severity;
 - duplicate flag.
+- alert status (`sent`, `suppressed`, `disabled`, or `failed`);
+- bounded alert error text when delivery fails.
 
 ## Detection semantics
 

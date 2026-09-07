@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS events (
     triage_label TEXT NOT NULL,
     severity TEXT NOT NULL,
     duplicate INTEGER NOT NULL DEFAULT 0,
+    alert_status TEXT NOT NULL DEFAULT 'pending',
+    alert_error TEXT NOT NULL DEFAULT '',
     FOREIGN KEY(token_id) REFERENCES tokens(id)
 );
 CREATE INDEX IF NOT EXISTS idx_events_token_time ON events(token_id, occurred_at);
@@ -53,6 +55,11 @@ class Database:
     def init(self) -> None:
         with self.conn() as con:
             con.executescript(SCHEMA)
+            columns = {row[1] for row in con.execute("PRAGMA table_info(events)")}
+            if "alert_status" not in columns:
+                con.execute("ALTER TABLE events ADD COLUMN alert_status TEXT NOT NULL DEFAULT 'pending'")
+            if "alert_error" not in columns:
+                con.execute("ALTER TABLE events ADD COLUMN alert_error TEXT NOT NULL DEFAULT ''")
 
     def create_token(self, token_id: str, name: str, filename: str, severity: str, notes: str = "") -> dict:
         created_at = datetime.now(timezone.utc).isoformat()
@@ -102,8 +109,9 @@ class Database:
         with self.conn() as con:
             cur = con.execute(
                 """INSERT INTO events(
-                    token_id,occurred_at,source_ip,user_agent,request_path,event_type,triage_label,severity,duplicate
-                ) VALUES(?,?,?,?,?,?,?,?,?)""",
+                    token_id,occurred_at,source_ip,user_agent,request_path,event_type,triage_label,severity,duplicate,
+                    alert_status,alert_error
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     token_id,
                     occurred_at,
@@ -114,11 +122,20 @@ class Database:
                     triage_label,
                     severity,
                     1 if duplicate else 0,
+                    "pending",
+                    "",
                 ),
             )
             event_id = cur.lastrowid
             row = con.execute("SELECT * FROM events WHERE id=?", (event_id,)).fetchone()
         return dict(row)
+
+    def set_alert_status(self, event_id: int, status: str, error: str = "") -> None:
+        with self.conn() as con:
+            con.execute(
+                "UPDATE events SET alert_status=?, alert_error=? WHERE id=?",
+                (status, error, event_id),
+            )
 
     def list_events(self, limit: int = 100) -> list[dict]:
         with self.conn() as con:

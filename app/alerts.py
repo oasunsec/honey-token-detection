@@ -27,16 +27,16 @@ def render_alert(event: dict, token: dict) -> tuple[str, str]:
     return subject, body
 
 
-def send_alert(settings: Settings, event: dict, token: dict) -> None:
+def send_alert(settings: Settings, event: dict, token: dict) -> str:
     if event.get("duplicate"):
-        return
+        return "suppressed"
     subject, body = render_alert(event, token)
     mode = settings.alert_mode.lower()
     if mode == "none":
-        return
+        return "disabled"
     if mode == "console":
         print(f"\n{subject}\n{body}\n")
-        return
+        return "sent"
     if mode != "email":
         raise ValueError(f"Unsupported alert mode: {settings.alert_mode}")
     if not (settings.smtp_host and settings.alert_to):
@@ -54,3 +54,4 @@ def send_alert(settings: Settings, event: dict, token: dict) -> None:
         if settings.smtp_user:
             smtp.login(settings.smtp_user, settings.smtp_password)
         smtp.send_message(msg)
+    return "sent"

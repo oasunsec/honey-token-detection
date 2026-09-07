@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import base64
 from datetime import datetime, timedelta, timezone
+import ipaddress
 import secrets
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from pydantic import BaseModel, Field, field_validator
 
 from .alerts import send_alert
@@ -40,32 +41,51 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.db = db
 
+    def require_management_access(request: Request) -> None:
+        """Protect management routes with an API key or local-only fallback."""
+        if settings.management_api_key:
+            supplied = request.headers.get("x-canary-api-key", "")
+            if not supplied or not secrets.compare_digest(supplied, settings.management_api_key):
+                raise HTTPException(status_code=401, detail="Management API authentication required")
+            return
+
+        client_host = request.client.host if request.client else ""
+        try:
+            is_loopback = ipaddress.ip_address(client_host).is_loopback
+        except ValueError:
+            is_loopback = client_host == "testclient"
+        if not is_loopback:
+            raise HTTPException(
+                status_code=503,
+                detail="Set CANARY_MANAGEMENT_API_KEY before using the management API remotely",
+            )
+
     @app.get("/health")
     def health() -> dict:
         return {"status": "ok"}
 
-    @app.post("/api/tokens")
+    @app.post("/api/tokens", dependencies=[Depends(require_management_access)])
     def create_token(body: TokenCreate) -> dict:
         token_id = secrets.token_urlsafe(18)
         token = db.create_token(token_id, body.name, body.filename, body.severity, body.notes)
         token["callback_url"] = callback_url(settings.base_url, token_id)
         return token
 
-    @app.get("/api/tokens")
+    @app.get("/api/tokens", dependencies=[Depends(require_management_access)])
     def list_tokens() -> list[dict]:
         tokens = db.list_tokens()
         for token in tokens:
             token["callback_url"] = callback_url(settings.base_url, token["id"])
         return tokens
 
-    @app.post("/api/tokens/{token_id}/disable")
+    @app.post("/api/tokens/{token_id}/disable", dependencies=[Depends(require_management_access)])
     def disable_token(token_id: str) -> dict:
         if not db.get_token(token_id):
             raise HTTPException(404, "Token not found")
         db.set_active(token_id, False)
         return {"status": "disabled", "token_id": token_id}
 
-    @app.post("/api/decoys")
+    @app.post("/api/decoys", dependencies=[Depends(require_management_access)])
     def generate_decoy(body: DecoyCreate) -> dict:
         token = db.get_token(body.token_id)
         if not token:
@@ -83,7 +103,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             path = create_docx_decoy(out, filename, url)
         return {"path": str(path), "token_id": body.token_id, "callback_url": url, "format": body.format}
 
-    @app.get("/api/events")
+    @app.get("/api/events", dependencies=[Depends(require_management_access)])
     def list_events(limit: int = 100) -> list[dict]:
         return db.list_events(max(1, min(limit, 1000)))
 
@@ -114,7 +134,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             severity=severity,
             duplicate=duplicate,
         )
-        send_alert(settings, event, token)
+        try:
+            alert_status = send_alert(settings, event, token)
+        except Exception as exc:
+            db.set_alert_status(event["id"], "failed", str(exc)[:500])
+            raise
+        db.set_alert_status(event["id"], alert_status)
         gif = base64.b64decode(TRANSPARENT_GIF_B64)
         return Response(content=gif, media_type="image/gif", headers={"Cache-Control": "no-store, no-cache, must-revalidate"})
 

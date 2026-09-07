@@ -6,7 +6,7 @@
 
 ## Executive result
 
-The core hypothesis was demonstrated in a local lab. A generated decoy callback returned the transparent GIF, created a SQLite event, ran the triage rule, produced an alert from the triaged event, and left the event available through `/api/events`. Console alerting and delivery to a loopback SMTP test sink both worked. Duplicate callbacks remained persisted while only the first matching event was alert-worthy. An obvious scanner User-Agent was classified as medium severity. Disabled tokens returned 404.
+The core hypothesis was demonstrated in a local lab. A generated decoy callback returned the transparent GIF, created a SQLite event, ran the triage rule, produced an alert from the triaged event, and left the event available through `/api/events`. Console alerting and delivery to a loopback SMTP test sink both worked, with the persisted event recording `alert_status=sent`. Duplicate callbacks remained persisted while only the first matching event was alert-worthy. An obvious scanner User-Agent was classified as medium severity. Disabled tokens returned 404. Management routes now require the configured API key for remote use and record alert failures as evidence.
 
 The DOCX packages contained the intended unique external relationship, but no Microsoft Word or LibreOffice viewer was installed in this environment, so viewer-side retrieval was not tested. The callback therefore must not be treated as guaranteed for every document open.
 
@@ -27,6 +27,8 @@ The DOCX packages contained the intended unique external relationship, but no Mi
 | Scanner heuristic | `curl/8.10` was classified `Possible automated scanner interaction` with medium severity |
 | Token disable | Disabled token callback returned HTTP 404 |
 | DOCX package | Both `word/_rels/document.xml.rels` files contained the correct unique callback URL with `TargetMode="External"` |
+| Management protection | Missing key returned 401 when configured; remote access without a key returned 503; valid key returned 200; `/health` stayed public |
+| Alert outcome evidence | Events recorded `sent`, `suppressed`, `disabled`, or `failed`; a safe SMTP failure test persisted the bounded error |
 
 The first unmodified `pytest -q` attempt hit `PermissionError: [WinError 5]` while pytest scanned the host's ACL-protected `C:\Users\oasun\AppData\Local\Temp\pytest-of-oasun`. The repository now uses `.pytest-tmp/`, which is ignored and makes the documented command pass on this host. This was an environment failure rather than an application test failure.
 
@@ -44,12 +46,12 @@ The generated OOXML relationship was inspected directly from each ZIP package an
 - Preview services, sandboxes, authorized administrators, NAT gateways, VPNs, proxies, and DNS/security infrastructure can generate events or obscure the originating identity.
 - A callback proves that the unique resource was requested. It does not prove that a human opened the file, that data was exfiltrated, or that the source IP identifies an attacker.
 - An offline or air-gapped host, copied file, or viewer that blocks external content may never produce a callback.
-- The callback endpoint intentionally has no authentication; the token is the tripwire identifier. Management endpoints are unauthenticated and are lab-only until protected.
-- SMTP connection or authentication failure occurs after the event is persisted and currently causes the request to fail; an alert-delivery status record is not yet stored.
+- The callback endpoint intentionally has no authentication; the token is the tripwire identifier. Management routes require `X-Canary-API-Key` when configured and otherwise accept loopback clients only; role separation and rate limiting are still absent.
+- SMTP connection or authentication failure still causes the callback request to fail so delivery problems are visible, but the event now persists `alert_status=failed` and a bounded error for diagnosis.
 
 ## Security weaknesses and changes
 
-The management API needs authentication, authorization, TLS deployment, rate limiting, and an audit trail before exposure beyond a controlled lab. SQLite is a local evidence store, not an encrypted or tamper-evident archive. Retention, access control, and backup protection still belong to the deployment. `CANARY_TRUST_PROXY_HEADERS` must only be enabled behind a trusted proxy. Filename path components are rejected to prevent decoy generation from escaping its selected output directory; the output directory itself must still be controlled by the operator.
+The management API now has an API-key/loopback boundary, but still needs role separation, rotation through a secret store, rate limiting, TLS deployment, and a management audit trail before exposure beyond a controlled lab. SQLite is a local evidence store, not an encrypted or tamper-evident archive. Retention, access control, and backup protection still belong to the deployment. `CANARY_TRUST_PROXY_HEADERS` must only be enabled behind a trusted proxy. Filename path components are rejected to prevent decoy generation from escaping its selected output directory; the output directory itself must still be controlled by the operator.
 
 The project does not provide encryption, DLP, least privilege, endpoint controls, removable-media controls, or SIEM correlation. Those controls remain necessary prevention and investigation layers.
 

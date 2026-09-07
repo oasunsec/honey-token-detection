@@ -13,6 +13,7 @@ def _bool(name: str, default: bool = False) -> bool:
 class Settings:
     db_path: str = os.getenv("CANARY_DB_PATH", "canary.db")
     base_url: str = os.getenv("CANARY_BASE_URL", "http://127.0.0.1:8000")
+    management_api_key: str = os.getenv("CANARY_MANAGEMENT_API_KEY", "")
     alert_mode: str = os.getenv("CANARY_ALERT_MODE", "console")  # console | email | none
     alert_to: str = os.getenv("CANARY_ALERT_TO", "")
     smtp_host: str = os.getenv("CANARY_SMTP_HOST", "")
