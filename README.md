@@ -10,11 +10,11 @@ Built an Azure-backed document-honeytoken receiver and connected its events to M
 
 ## Local demo
 
-Created a synthetic DOCX, opened it in desktop Word, and captured the resulting SQLite event and console-alert status. The edited recording combines a live demo console with a cropped Word capture.
-
 [![Document creation, Word, and the recorded callback](docs/demo/local-word-callback.gif)](docs/demo/local-word-callback.mp4)
 
-[Watch the MP4](docs/demo/local-word-callback.mp4) · [Recording details](docs/demo/README.md)
+[Watch the MP4](docs/demo/local-word-callback.mp4)
+
+The local Word recording and the Azure-to-Sentinel evidence cover separate test paths; the Sentinel path is documented in the [case study](CASE_STUDY.md).
 
 ## Implementation
 
