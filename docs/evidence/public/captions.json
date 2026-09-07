@@ -110,59 +110,41 @@
   },
   {
     "number": "12",
-    "title": "GitHub main CI status",
-    "image": "12-github-ci-status.jpg",
-    "kind": "GitHub UI capture",
-    "source": "Actions run 34152044446, commit 2858824",
-    "meaning": "Captured the completed main-branch CI run after the application fixes.",
-    "sha256": "7f1dee8b4658c579619cc6296bd78215b57327421bf75690a26bddd5fa18bdef"
-  },
-  {
-    "number": "13",
-    "title": "GitHub test job",
-    "image": "13-github-test-job.jpg",
-    "kind": "GitHub UI capture",
-    "source": "Actions run 34152044446",
-    "meaning": "Captured the successful test job in the same GitHub Actions run.",
-    "sha256": "136c53ad65eaea796d107c12430e95ce24f4b0d344f0ce2a17b4c702f6d764bf"
-  },
-  {
-    "number": "14",
-    "title": "GitHub pytest log",
-    "image": "14-github-pytest-output.jpg",
+    "title": "GitHub Actions test run",
+    "image": "12-github-pytest-output.jpg",
     "kind": "GitHub UI capture",
     "source": "Job 101836165394 in Actions run 34152044446",
-    "meaning": "Captured the pytest output from the completed GitHub test job.",
+    "meaning": "The main-branch Actions test job completed successfully and recorded 16 passing tests.",
     "sha256": "b41274e5370bfa5b1a8a6f811f47fb4be1cd1d7948406232b9dea3773033b7ef"
   },
   {
-    "number": "15",
+    "number": "13",
     "title": "Local regression and SMTP delivery",
     "source": "tests/test_smtp_delivery.py + portfolio/pytest.txt",
     "kind": "Recorded test output",
     "content": "SMTP sink transcript (redacted)\nTransport: loopback TCP SMTP sink on an ephemeral local port\nS: 220 loopback SMTP sink ready\nC: EHLO [LOCAL CLIENT]\nS: 250 OK\nC: MAIL [REDACTED]\nS: 250 OK\nC: RCPT [REDACTED]\nS: 250 OK\nC: DATA\nS: 354 End with dot\nS: 250 Accepted\nC: QUIT\nS: 221 Bye\nResult: callbacks=2 | persisted_events=2 | accepted_messages=1 | alert_statuses=suppressed,sent | raw_token_in_message=absent\n\nFull suite: 16 passed, 2 dependency warnings.",
     "meaning": "The integration test opened a real loopback SMTP connection, sent one DATA message after two callbacks, and confirmed two persisted events with sent/suppressed alert states. SMTP identities and callback tokens are redacted from the public record.",
-    "image": "15-evidence.jpg",
+    "image": "13-evidence.jpg",
     "sha256": "cf0a95a276bd4087f55dcf11e2e306f4d281ed660da31b3face1077ad5a0259e"
   },
   {
-    "number": "16",
+    "number": "14",
     "title": "Secret scanning",
     "source": "portfolio/gitleaks.txt",
     "kind": "Gitleaks output",
     "content": "1:52PM INF 19 commits scanned.\n1:52PM INF scanned ~142484 bytes (142.48 KB) in 1.68s\n1:52PM INF no leaks found\n",
     "meaning": "Scanned the tracked history with Gitleaks; the recorded scan found no secrets.",
-    "image": "16-evidence.jpg",
+    "image": "14-evidence.jpg",
     "sha256": "6acebd2a60037ae15e5cdf6aca06629f6c7afa3a21ae6eb9fa55b2e3b1fa3aea"
   },
   {
-    "number": "17",
+    "number": "15",
     "title": "Limitations and teardown status",
     "source": "LIMITATIONS.md + COST_AND_TEARDOWN.md",
     "kind": "Operational notes",
     "content": "Resource lifecycle\n  Dedicated project resource group deployed\n  Scoped teardown script added with explicit confirmation\n  Teardown not performed in the recorded run\n  Cost measurement not captured\n\nOperational scope documented in LIMITATIONS.md",
     "meaning": "Recorded the resource state at the end of the run. The cleanup command and operational constraints are documented separately.",
-    "image": "17-evidence.jpg",
+    "image": "15-evidence.jpg",
     "sha256": "5ad8601a088dbd28163dbd2a26e7e0cb277f39b4547a482c0a499b848f8aeed8"
   }
 ]

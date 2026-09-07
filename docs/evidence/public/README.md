@@ -8,7 +8,7 @@ Account details, email addresses, source IPs, tenant/subscription identifiers, c
 
 ## Browse the evidence
 
-[Deployment](#03-infrastructure-deployment) · [Word callback](#07-word-callback-and-triage) · [Sentinel incident](#11-sentinel-incident) · [Tests](#15-local-regression-and-smtp-delivery)
+[Deployment](#03-infrastructure-deployment) · [Word callback](#07-word-callback-and-triage) · [Sentinel incident](#11-sentinel-incident) · [Tests](#13-local-regression-and-smtp-delivery)
 
 ## 01. Purpose and architecture
 
@@ -98,50 +98,34 @@ Recorded the resulting high-severity Sentinel incident. Account and resource ide
 
 ![Sentinel incident](11-evidence.jpg)
 
-## 12. GitHub main CI status
-
-**GitHub UI capture** — Source: `Actions run 34152044446, commit 2858824`.
-
-Captured the completed main-branch CI run after the application fixes.
-
-![GitHub main CI status](12-github-ci-status.jpg)
-
-## 13. GitHub test job
-
-**GitHub UI capture** — Source: `Actions run 34152044446`.
-
-Captured the successful test job in the same GitHub Actions run.
-
-![GitHub test job](13-github-test-job.jpg)
-
-## 14. GitHub pytest log
+## 12. GitHub Actions test run
 
 **GitHub UI capture** — Source: `Job 101836165394 in Actions run 34152044446`.
 
-Captured the pytest output from the completed GitHub test job.
+The main-branch Actions test job completed successfully and recorded 16 passing tests.
 
-![GitHub pytest log](14-github-pytest-output.jpg)
+![GitHub Actions test run](12-github-pytest-output.jpg)
 
-## 15. Local regression and SMTP delivery
+## 13. Local regression and SMTP delivery
 
 **Recorded test output** — Source: `tests/test_smtp_delivery.py + portfolio/pytest.txt`.
 
 The integration test opened a real loopback SMTP connection, sent one DATA message after two callbacks, and confirmed two persisted events with sent/suppressed alert states. SMTP identities and callback tokens are redacted from the public record.
 
-![Local regression and SMTP delivery](15-evidence.jpg)
+![Local regression and SMTP delivery](13-evidence.jpg)
 
-## 16. Secret scanning
+## 14. Secret scanning
 
 **Gitleaks output** — Source: `portfolio/gitleaks.txt`.
 
 Scanned the tracked history with Gitleaks; the recorded scan found no secrets.
 
-![Secret scanning](16-evidence.jpg)
+![Secret scanning](14-evidence.jpg)
 
-## 17. Limitations and teardown status
+## 15. Limitations and teardown status
 
 **Operational notes** — Source: `LIMITATIONS.md + COST_AND_TEARDOWN.md`.
 
 Recorded the resource state at the end of the run. The cleanup command and operational constraints are documented separately.
 
-![Limitations and teardown status](17-evidence.jpg)
+![Limitations and teardown status](15-evidence.jpg)
