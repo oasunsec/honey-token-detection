@@ -4,7 +4,7 @@ Extended a local Python document-honeytoken service into an Azure receiver conne
 
 The work also covered the document side: a generated DOCX opened in Word and requested its local callback. That test ran separately from the Azure callback test.
 
-[![Honey Token: separate local Word and Azure-to-Sentinel event paths](docs/diagrams/tested-event-paths.svg)](docs/diagrams/tested-event-paths.svg)
+[![Honey Token: separate local Word and Azure-to-Sentinel event paths](docs/diagrams/tested-event-paths.png)](docs/diagrams/tested-event-paths.png)
 
 **Stack:** Python, FastAPI, SQLite, Azure Table Storage, Container Apps, Bicep, Log Analytics, KQL, Microsoft Sentinel, Docker, GitHub Actions.
 
