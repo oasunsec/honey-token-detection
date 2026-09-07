@@ -10,7 +10,7 @@ Account details, email addresses, source IPs, tenant/subscription identifiers, c
 
 **Design summary** — Source: `ARCHITECTURE.md`.
 
-Detect interaction in an authorized lab. A callback is a signal, not proof of exfiltration or identity.
+Extended the local document-token receiver with Azure Table Storage and Sentinel ingestion. Word and cloud callbacks were exercised separately.
 
 ![Purpose and architecture](01-evidence.jpg)
 
@@ -18,7 +18,7 @@ Detect interaction in an authorized lab. A callback is a signal, not proof of ex
 
 **Archived record, captured 2026-09-07** — Source: `00-azure-start-state.json + docs/BASELINE.md`.
 
-Shows the recorded starting point. This is a view of archived records, not an original portal screenshot.
+Recorded the local SQLite starting point and nine passing baseline tests before adding the Azure adapters.
 
 ![Starting state and baseline](02-evidence.jpg)
 
@@ -26,7 +26,7 @@ Shows the recorded starting point. This is a view of archived records, not an or
 
 **Archived Azure deployment response** — Source: `03-bicep-final-deployment.json`.
 
-Records the actual deployment result while withholding subscription, tenant, principal and endpoint values.
+Deployed the Bicep resources successfully. Resource identifiers and endpoint values are omitted from the saved response.
 
 ![Infrastructure deployment](03-evidence.jpg)
 
@@ -34,7 +34,7 @@ Records the actual deployment result while withholding subscription, tenant, pri
 
 **Source configuration evidence** — Source: `infra/main.bicep`.
 
-Shows checked-in controls. Role configuration alone does not prove a fresh live access review.
+Disabled registry admin access, storage shared keys, HTTP ingress, and public management routes in the deployment configuration.
 
 ![Receiver security configuration](04-evidence.jpg)
 
@@ -42,7 +42,7 @@ Shows checked-in controls. Role configuration alone does not prove a fresh live 
 
 **Archived HTTP result** — Source: `09-container-app-health.json`.
 
-HTTP 200 with receiver-only mode and Azure Table storage in the saved deployment validation.
+Requested the deployed health endpoint; it returned HTTP 200 with receiver-only mode and Azure Table Storage.
 
 ![Deployed receiver health](05-evidence.jpg)
 
@@ -50,7 +50,7 @@ HTTP 200 with receiver-only mode and Azure Table storage in the saved deployment
 
 **Microsoft Word UI capture** — Source: `Word 16.0.20326.20132`.
 
-Word displays the generated synthetic document. The corresponding local callback event appears in image 07.
+Opened the generated synthetic document in Word. The local callback it produced is recorded in image 07.
 
 ![Word renders the synthetic decoy](06-word-decoy.png)
 
@@ -58,7 +58,7 @@ Word displays the generated synthetic document. The corresponding local callback
 
 **Archived event from observed Word open** — Source: `word-viewer-result.json`.
 
-Word 16.0.20326.20132 requested the local callback under existing settings. This does not establish Protected View or remote HTTPS behavior.
+Captured the Office User-Agent and high-severity event when Word requested the loopback pixel.
 
 ![Word callback and triage](07-evidence.jpg)
 
@@ -66,7 +66,7 @@ Word 16.0.20326.20132 requested the local callback under existing settings. This
 
 **Archived Azure Table query** — Source: `table-events-sanitized.json`.
 
-Saved Azure Table rows retain alert and ingestion outcomes, including scanner severity. These rows are not duplicates; suppression is verified by the regression tests.
+Queried stored events and retained both successful delivery outcomes and the first failed ingestion attempt.
 
 ![Persisted events and delivery outcomes](08-evidence.jpg)
 
@@ -74,7 +74,7 @@ Saved Azure Table rows retain alert and ingestion outcomes, including scanner se
 
 **Archived CanaryHit_CL query** — Source: `log-analytics-latest.json`.
 
-Saved query rows connect receiver events to the SIEM ingestion path. Raw callback tokens and source IPs are excluded.
+Queried four ingested records, including a scanner classification and a suppressed repeat notification.
 
 ![Log Analytics ingestion](09-evidence.jpg)
 
@@ -82,7 +82,7 @@ Saved query rows connect receiver events to the SIEM ingestion path. Raw callbac
 
 **Archived rule configuration** — Source: `sentinel-rule.json`.
 
-Shows scheduled detection logic and incident creation configuration. The evaluation schedule introduces delay.
+Deployed the scheduled Sentinel rule with a five-minute frequency, ten-minute lookback, and incident creation enabled.
 
 ![Sentinel analytic rule](10-evidence.jpg)
 
@@ -90,7 +90,7 @@ Shows scheduled detection logic and incident creation configuration. The evaluat
 
 **Archived Sentinel incident response** — Source: `sentinel-incidents.json`.
 
-Actual saved incident response; owner, incident URL, related resource IDs and tenant identifiers are omitted.
+Recorded the resulting high-severity Sentinel incident. Account and resource identifiers are omitted.
 
 ![Sentinel incident](11-evidence.jpg)
 
@@ -98,7 +98,7 @@ Actual saved incident response; owner, incident URL, related resource IDs and te
 
 **capture of completed GitHub run** — Source: `Actions run 34152044446, commit 2858824`.
 
-The completed main-branch run reports Success. Account details and navigation are excluded from the crop.
+Captured the completed main-branch CI run after the application fixes.
 
 ![GitHub main CI status](12-github-ci-status.jpg)
 
@@ -106,7 +106,7 @@ The completed main-branch run reports Success. Account details and navigation ar
 
 **GitHub UI capture** — Source: `Actions run 34152044446`.
 
-The workflow graph shows a successful test job. This is a cropped view of the actual GitHub page.
+Captured the successful test job in the same GitHub Actions run.
 
 ![GitHub test job](13-github-test-job.jpg)
 
@@ -114,7 +114,7 @@ The workflow graph shows a successful test job. This is a cropped view of the ac
 
 **GitHub UI capture** — Source: `Job 101836165394 in Actions run 34152044446`.
 
-The actual pytest log shows completed assertions and dependency warnings. The full local summary is also visible in image 15.
+Captured the pytest output from the completed GitHub test job.
 
 ![GitHub pytest log](14-github-pytest-output.jpg)
 
@@ -122,7 +122,7 @@ The actual pytest log shows completed assertions and dependency warnings. The fu
 
 **verification output** — Source: `portfolio/pytest.txt + tests/test_smtp_delivery.py`.
 
-The suite includes a real ephemeral loopback SMTP sink, triage-field verification, duplicate suppression, and notification-failure isolation. No external mailbox credentials are used.
+Ran the suite, including delivery to a local SMTP sink and the SMTP-failure regression. Sixteen tests passed.
 
 ![Local regression and SMTP delivery](15-evidence.jpg)
 
@@ -130,7 +130,7 @@ The suite includes a real ephemeral loopback SMTP sink, triage-field verificatio
 
 **Gitleaks output** — Source: `portfolio/gitleaks.txt`.
 
-Gitleaks found no secrets in the scanned Git history. Runtime tokens and raw evidence are excluded from version control.
+Scanned the tracked history with Gitleaks; the recorded scan found no secrets.
 
 ![Secret scanning](16-evidence.jpg)
 
@@ -138,6 +138,6 @@ Gitleaks found no secrets in the scanned Git history. Runtime tokens and raw evi
 
 **Operational notes** — Source: `CASE_STUDY.md + COST_AND_TEARDOWN.md`.
 
-Use the scoped teardown script to remove the lab resources after exporting any records needed for investigation.
+Added the scoped teardown script but did not run it. Delivery retries, rate limiting, and integrity controls remained unfinished.
 
 ![Limitations and teardown status](17-evidence.jpg)

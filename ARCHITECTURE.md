@@ -4,7 +4,8 @@
 flowchart TD
   G[Local canary generator] --> D[Canary DOCX]
   D --> W[Microsoft Word on controlled endpoint]
-  W --> I[Azure Container Apps HTTPS ingress]
+  W --> LOCAL[Local SQLite receiver: observed Word test]
+  HTTP[Controlled HTTP requests] --> I[Azure Container Apps HTTPS ingress]
   I --> R[Receiver-only FastAPI application]
   R --> T[Azure Table Storage: CanaryHits]
   R --> O[NotificationOutbox state]
@@ -21,11 +22,6 @@ flowchart TD
   MI -->|Monitoring Metrics Publisher| DCR
 ```
 
-The callback persists a hit before attempting email or Azure Monitor delivery. The Azure receiver does not expose management routes; token and decoy provisioning can happen locally with the same Azure Table backend using the operator's `DefaultAzureCredential`.
+The work added the Azure branch to the existing local receiver. Controlled HTTP requests exercised the cloud path; Word exercised the separate loopback path.
 
-Notification transports are independent: an SMTP failure is persisted and does
-not skip Azure ingestion or turn a successfully recorded hit into an HTTP 500.
-No configured ingestion adapter is recorded as disabled. Delivery remains
-synchronous and there is no automatic retry worker; operators must inspect
-failed delivery states. Concurrent deduplication is best effort, not an
-exactly-once delivery guarantee.
+The handler stored events before attempting notification. SMTP failures retained a failed status and did not skip the Sentinel adapter. An absent adapter was recorded as disabled. Delivery remained synchronous; no retry worker or cross-instance atomic suppression was added.

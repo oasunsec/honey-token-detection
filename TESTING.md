@@ -1,20 +1,26 @@
-# Testing
+# Tests exercised
 
-Local regression tests run with `.\.venv\Scripts\pytest.exe -q` and cover token callbacks, duplicate suppression, scanner triage, disabled tokens, DOCX external relationships, management authentication, receiver-only routing, public event redaction, console/SMTP rendering, and persisted SMTP failures.
+The local baseline passed nine tests. After the Azure adapters and failure-handling fixes, the suite passed 16 tests with two dependency deprecation warnings.
 
-The Azure validation sequence is:
+| Scenario exercised | Result |
+| --- | --- |
+| Callback, scanner, repeat, and revoked token | Stored events, scanner classification, suppression, and 404 behavior matched the assertions |
+| DOCX generation | Package contained the external image relationship; malformed filenames were rejected |
+| Management authentication | Unauthenticated remote requests were rejected; non-ASCII credentials returned 401 |
+| Receiver-only routing | Management endpoints returned 404 |
+| SMTP sink | One triage-derived email arrived for two callbacks; both events persisted |
+| SMTP failure | Event retained a failed status, response remained a GIF, Sentinel ingestion was still attempted |
+| Missing Sentinel adapter | Ingestion status was recorded as disabled |
+| Event redaction | Public event output excluded raw callback identifiers |
 
-1. Deploy the dedicated resource group with `scripts/azure/deploy.ps1`.
-2. Seed a DOCX token locally with `CANARY_STORAGE_BACKEND=azure_table`, the storage table URL, and the Azure callback base URL. This uses the operator's Entra login and does not expose management routes.
-3. Open the DOCX in a controlled Word endpoint or make a controlled callback request for receiver validation.
-4. Confirm HTTP 200, Azure Table persistence, notification delivery, `CanaryHit_CL` ingestion and Sentinel rule/incident evidence.
-5. Repeat from a second controlled endpoint and record duplicate/scanner behavior.
+The Azure run used controlled HTTPS callbacks and produced Table records, Log Analytics rows, and a Sentinel incident. The separate Word test retrieved a loopback callback from a generated local DOCX. Cloud SMTP, Word-to-Azure retrieval, Protected View, and other viewers were not exercised.
 
-Viewer-side callback behavior is recorded as tested, blocked, partial, or not tested. No Office or endpoint policy is bypassed.
+## Run the suite
 
-The suite includes actual SMTP delivery to a threaded ephemeral loopback sink,
-checks triage fields in the received message, and verifies duplicate suppression.
-An SMTP outage must preserve a failed status, still return the GIF, and still
-attempt independently configured Sentinel ingestion. An absent Sentinel adapter
-is recorded as disabled. Run `pytest -q`; collection is restricted to `tests/`
-so ignored evidence copies do not become tests.
+From the repository root, after installing dependencies:
+
+```bash
+pytest -q
+```
+
+Tests are under `tests/`. The SMTP integration test starts its own ephemeral loopback sink and uses no external credentials.

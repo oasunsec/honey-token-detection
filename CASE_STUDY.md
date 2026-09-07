@@ -1,64 +1,51 @@
-# Document honeytokens with Azure and Microsoft Sentinel
+# From a local document token to a Sentinel incident
 
-Honey Token turns a decoy document's external image request into an event that can be investigated. The project combines a Python/FastAPI receiver, document generation, durable storage, scanner-aware triage, and console, SMTP, or Sentinel integration.
+The starting service generated decoy documents, stored callbacks in SQLite, and sent console or SMTP alerts. The Azure work added a durable receiver and connected its events to Microsoft Sentinel without exposing the management API.
 
-## Problem and approach
+Work recorded on 7 September 2026 used Windows 11, Python 3.13.14, and Azure in `southcentralus`.
 
-A sensitive-looking decoy can provide an early signal when accessed outside its expected workflow. Each generated document contains a unique callback URL. When a compatible viewer requests that resource, the receiver stores the timestamp, source metadata, and document association before classifying the event and attempting notification.
+## Started with the local receiver
 
-The signal has a narrow meaning: the resource was requested. Security scanners and preview services can trigger it, while offline hosts or viewers that block external content may produce no event. Investigation requires identity, endpoint, and file-access context.
+The baseline had nine passing tests. Token creation, revocation, DOCX/HTML generation, scanner classification, and duplicate suppression were already present. Azure storage and Sentinel ingestion were missing.
 
-## Implementation
+The implementation retained SQLite for local use and added an Azure Table backend for the deployed receiver. Callback events were stored before notification delivery. The receiver recorded alert and ingestion outcomes separately.
 
-The local service uses SQLite and exposes management endpoints for creating, listing, and disabling tokens. DOCX files use an external image relationship; HTML decoys reference the same transparent pixel endpoint.
+## Deployed the cloud path
 
-The Azure deployment uses Bicep to provision Container Apps, Table Storage, a managed identity, a container registry, Log Analytics, and Microsoft Sentinel. The public receiver exposes only health and callback routes. Management routes return 404, and provisioning runs through a local operator process.
+Bicep provisioned a container registry, managed identity, Container Apps receiver, Table Storage, Log Analytics workspace, Direct Data Collection Rule, and Sentinel rule. The runtime used scoped `AcrPull`, `Storage Table Data Contributor`, and `Monitoring Metrics Publisher` roles. Storage shared keys and registry admin access were disabled.
 
-```text
-Callback -> stored event -> triage -> console / SMTP
-                              |
-                              +-> DCR -> Log Analytics -> Sentinel incident
-```
+The deployed receiver returned 200 from `/health` and 404 from `/api/events`. Token provisioning remained local. Controlled requests to the public callback returned the 34-byte GIF and created Table Storage events.
 
-The managed identity has scoped access to pull the container image, write table entities, and ingest logs. Storage shared keys and registry admin credentials are disabled. Log Analytics receives a hashed token identifier rather than the raw callback URL.
+## Fixed the first ingestion failure
 
-## Engineering decisions
+The first event did not reach Log Analytics. The receiver was using a regional ingestion hostname that failed DNS resolution. Table Storage retained the hit with `sentinel_status=failed`, which exposed the delivery failure without losing the callback.
 
-- **Persist before delivery.** SMTP or ingestion failures leave a stored event and delivery status for investigation.
-- **Keep delivery paths independent.** An SMTP failure does not prevent the Sentinel adapter from running or change a recorded callback into an HTTP 500.
-- **Retain repeat events.** Duplicate suppression reduces notifications while retaining callback records.
-- **Separate management from collection.** Local management uses an API key for remote clients; the Azure receiver disables management routes entirely.
-- **Exclude tokens from access logs.** Callback paths contain live identifiers, so the container disables Uvicorn access logging.
+The deployment was changed to read `dcr.properties.endpoints.logsIngestion` from the deployed rule. Four subsequent records appeared in `CanaryHit_CL`. The scheduled rule created a new high-severity incident titled **Canary document access detected**.
 
-## Observed behavior
+## Opened the generated document in Word
 
-The following observations were recorded on 7 September 2026 using Windows 11, Python 3.13.14, and Azure in `southcentralus`.
+Word 16.0.20326.20132 displayed the synthetic financial document and requested its loopback pixel at `2026-09-07T18:27:35.267154+00:00`. SQLite recorded the Office User-Agent, high severity, and a sent console alert.
 
-| Scenario | Observation |
-| --- | --- |
-| Local document retrieval | Word 16.0.20326.20132 displayed the generated DOCX and requested its loopback callback. The event was classified high and a console alert was recorded. |
-| Cloud callback | A controlled HTTP request returned a 34-byte GIF and produced a Table Storage event, Log Analytics row, and Sentinel incident. |
-| Scanner request | A curl User-Agent received medium severity with the classification `Possible automated scanner interaction`. |
-| Repeat request | The event remained stored; its notification was suppressed and the SIEM row recorded `FirstHit=false`. |
-| Disabled token | The callback returned HTTP 404. |
-| SMTP delivery | An ephemeral local SMTP sink received a message containing the event's triage fields. Two callbacks produced one email within the suppression window. |
+This was a local document-to-local receiver test. The Azure path used controlled HTTP requests; Word-to-Azure retrieval was not exercised. Office and endpoint policies were left unchanged.
 
-The Word and Azure paths were exercised separately. Word-to-Azure retrieval, Protected View, mobile viewers, and cloud SMTP delivery were not tested. The [compatibility matrix](COMPATIBILITY.md) records viewer coverage; the [screenshot walkthrough](docs/evidence/public/README.md) shows the saved records and application captures.
+## Exercised repeats, scanners, and revocation
 
-## Ingestion failure and fix
+A curl request received medium severity and the classification `Possible automated scanner interaction`. A repeated request remained stored but its notification was suppressed; the ingested row recorded `FirstHit=false` and `RepeatCount=1`. Disabling the token changed the callback response to HTTP 404.
 
-The first Azure ingestion attempt failed because the receiver used a regional hostname that did not resolve. The hit remained in Table Storage with `sentinel_status=failed`. Bicep now supplies `dcr.properties.endpoints.logsIngestion`, the endpoint returned by the deployed Data Collection Rule. Subsequent events reached `CanaryHit_CL` and generated a Sentinel incident.
+The SMTP test delivered a triage-derived message to an ephemeral loopback sink. Two callbacks produced one email, and both events remained stored. No external mailbox was used.
 
-This failure illustrates why collection and notification have separate outcomes: an ingestion outage should remain distinguishable from a missing callback.
+## Fixed notification and management failures
 
-## Operational limits
+An SMTP exception could interrupt the callback response and prevent the Sentinel adapter from running. The handler was changed to persist the failed notification, continue the independent ingestion attempt, and return the GIF. A regression test covered that path.
 
-Delivery is synchronous and has no automatic retry worker. Duplicate suppression is best effort across concurrent instances. Table Storage is durable but does not provide a tamper-evident forensic archive. A broader deployment needs ingress rate limits, retention rules, failed-delivery monitoring, and additional viewer testing.
+A non-ASCII management key could also cause a server error during comparison. The comparison was corrected and malformed credentials returned 401. An unconfigured Sentinel adapter now recorded `disabled` instead of leaving an event pending.
 
-The Sentinel rule runs every five minutes with a ten-minute lookback, so incidents depend on ingestion and scheduled evaluation. Callback IP addresses may identify a proxy or scanner rather than the originating user.
+The Docker build context was restricted to application files, Compose was bound to loopback, and Uvicorn access logs were disabled because callback paths contained live tokens. The final suite passed 16 tests with two dependency deprecation warnings.
 
-## Explore the implementation
+## Remaining work
 
-- [Architecture](ARCHITECTURE.md) and [trust boundaries](docs/architecture.md)
-- [Azure deployment](AZURE_DEPLOYMENT.md) and [Sentinel queries](SENTINEL.md)
-- [Tests](TESTING.md), [security notes](SECURITY.md), and [cost and teardown](COST_AND_TEARDOWN.md)
+No retry worker, distributed atomic suppression, ingress rate limiter, or tamper-evident archive was added. Cloud SMTP, Protected View, separate-endpoint Word, and mobile viewers remained untested. The resource group had not been torn down, and no cost measurement was captured.
+
+The observed callbacks established resource retrieval. They did not establish who opened a document or whether data was exfiltrated.
+
+[View the screenshots](docs/evidence/public/README.md) · [Run the project](docs/SETUP.md) · [Test details](TESTING.md)

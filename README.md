@@ -1,296 +1,47 @@
 # Honey Token
 
-Honey Token detects requests from decoy documents and turns them into triaged security events. It runs locally with SQLite or on Azure with Table Storage and Microsoft Sentinel.
+Extended a local Python document-honeytoken service into an Azure receiver connected to Microsoft Sentinel. Added durable cloud storage, managed-identity ingestion, and a scheduled detection rule, then traced controlled callbacks through to a Sentinel incident.
 
-The project creates a unique callback token, associates it with a decoy such as `Synthetic_Forecast.docx`, records callback telemetry, performs lightweight triage, suppresses duplicate notifications, and sends an alert to the console or email.
+The work also covered the document side: a generated DOCX opened in Word and requested its local callback. That test ran separately from the Azure callback test.
 
-[Read the case study](CASE_STUDY.md) for the architecture, engineering decisions, and observed behavior, or [browse the screenshots](docs/evidence/public/README.md) for a visual walkthrough.
+**Stack:** Python, FastAPI, SQLite, Azure Table Storage, Container Apps, Bicep, Log Analytics, KQL, Microsoft Sentinel, Docker, GitHub Actions.
 
-## How it works
+## Work completed
 
-```text
-Decoy file
-   |
-   | external callback
-   v
-FastAPI token endpoint
-   |
-   +--> SQLite or Azure Table evidence
-   |
-   +--> Triage rule
-   |
-   +--> Console / email alert
-```
+- Added Azure Table Storage while retaining the local SQLite backend.
+- Deployed the receiver with management routes disabled and managed-identity access to ACR, Table Storage, and the Data Collection Rule.
+- Fixed a failed ingestion endpoint and traced subsequent events into `CanaryHit_CL` and a high-severity Sentinel incident.
+- Exercised scanner classification, duplicate suppression, token revocation, and local SMTP delivery.
+- Fixed SMTP failure handling so recorded callbacks still returned the pixel and attempted Sentinel ingestion.
+- Added regression coverage for notification failures and malformed management credentials; the suite reached 16 passing tests.
+- Restricted the Docker build context, bound Compose to loopback, and disabled access logs that contained callback tokens.
 
-This is a **detective deception control**. It does not replace encryption, access control, DLP, EDR, removable-media policy, or audit logging.
+## Results
 
-## Features
+Word 16.0.20326.20132 retrieved the local document's callback. The receiver stored the event, assigned high severity, and recorded a console alert. In the separate Azure run, controlled HTTPS requests produced stored events, Log Analytics rows, and a Sentinel incident. A repeated request remained in storage while its notification was suppressed. A local SMTP sink received one email for two callbacks within the suppression window.
 
-- Unique cryptographically random token per decoy
-- Public callback endpoint returning a transparent 1x1 GIF
-- Token metadata stored in SQLite locally or Azure Table Storage in the receiver deployment
-- HTML decoy generator
-- DOCX decoy generator using an external image relationship
-- Source IP, User-Agent, timestamp, token and filename logging
-- Simple scanner-aware triage
-- Five-minute duplicate notification suppression by default
-- Console alerts by default
-- SMTP email alerts as an option
-- Token disable endpoint
-- Event API for investigation
-- Optional API-key protection for management endpoints, with loopback-only fallback
-- Persisted alert outcome and delivery error evidence
-- Automated tests
-- Docker support
+The [case study](CASE_STUDY.md) follows the implementation and the failures fixed along the way. The [screenshot walkthrough](docs/evidence/public/README.md) contains the application captures and sanitized records from the work.
 
-## Detection limits
+## Scope left open
 
-A callback-based document token **does not guarantee detection of every file open**.
+Word-to-Azure retrieval, Protected View, mobile viewers, and cloud SMTP were not tested. Automatic delivery retries, atomic suppression across instances, rate limiting, and tamper-evident retention were not implemented. Callback telemetry did not establish user identity or data exfiltration.
 
-The callback may not fire when:
+## Repository guide
 
-- the endpoint is offline or air-gapped;
-- Microsoft Office or another viewer blocks external content;
-- Protected View prevents the resource from loading;
-- a proxy/firewall blocks the callback;
-- the file is copied without being opened;
-- the viewer does not support the external resource behavior.
+| File | Contents |
+| --- | --- |
+| [Case study](CASE_STUDY.md) | Build sequence, fixes, and outcomes |
+| [Architecture](ARCHITECTURE.md) | Local and cloud paths used in the work |
+| [Azure deployment](AZURE_DEPLOYMENT.md) | Resources and permissions deployed |
+| [Sentinel](SENTINEL.md) | Ingestion failure, rule configuration, and incident |
+| [Tests](TESTING.md) | Scenarios exercised and remaining coverage |
+| [Setup](docs/SETUP.md) | Commands, API examples, and SMTP configuration |
+| [Security](SECURITY.md) | Controls implemented and deployment constraints |
+| [Compatibility](COMPATIBILITY.md) | Document viewer results |
+| [Cost and teardown](COST_AND_TEARDOWN.md) | Resource lifecycle and cleanup command |
 
-Also, a source IP is not identity. It can belong to a proxy, VPN, NAT gateway, mail-security scanner, sandbox, or resolver. Correlate the event with identity, endpoint, file-audit, DLP and network telemetry before attribution.
-
-## Quick start
-
-### 1. Create a virtual environment
-
-```bash
-python -m venv .venv
-```
-
-Linux/macOS:
-
-```bash
-source .venv/bin/activate
-```
-
-Windows PowerShell:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-### 2. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Start the API
-
-```bash
-uvicorn app.main:app --reload --no-access-log
-```
-
-Check:
-
-```bash
-curl http://127.0.0.1:8000/health
-```
-
-Expected:
-
-```json
-{"status":"ok","receiver_only":false,"receiver_version":"local","storage_backend":"sqlite"}
-```
-
-### 4. Create a financial-document decoy
-
-```bash
-python -m app.cli create \
-  --name "Finance bait" \
-  --filename "Synthetic_Forecast.docx" \
-  --format docx
-```
-
-The command returns a token ID, callback URL and generated decoy path.
-
-### 5. Send a callback
-
-Call the callback URL returned by the CLI:
-
-```bash
-curl -A "Lab-Validation" "http://127.0.0.1:8000/t/YOUR_TOKEN/pixel.gif" -o /dev/null
-```
-
-You should see a console alert and an event in:
-
-```text
-GET /api/events
-```
-
-Open interactive API docs at:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-### 6. Open the document
-
-Open the generated file on a lab endpoint that can reach the callback server. Record whether the viewer actually requests the external resource. If it does not, treat that as an observed product-control limitation rather than trying to bypass the viewer's security controls.
-
-## Azure deployment
-
-The checked-in Azure path provisions a dedicated resource group with a Basic ACR, user-assigned managed identity, Consumption Container App, Standard LRS Table Storage, Log Analytics, a Direct Data Collection Rule and a Microsoft Sentinel scheduled rule. The receiver image is unchanged application code packaged in the existing `Dockerfile`; Azure switches only the storage and ingestion adapters through environment variables.
-
-```powershell
-.\scripts\azure\preflight.ps1
-.\scripts\azure\deploy.ps1
-.\scripts\azure\validate.ps1
-```
-
-The deployed receiver exposes `/health` and `/t/<token>/pixel.gif`. It returns 404 for `/api/*` so management operations stay local to an authenticated operator process. The runtime uses its managed identity for ACR pull, Azure Table Storage and Logs Ingestion. It does not use storage keys, registry admin credentials, or callback secrets in the container configuration. `CanaryHit_CL` receives only a hashed canary identifier and normalized event fields.
-
-## Management API protection
-
-The callback route stays public because the token is the tripwire identifier. Management routes under `/api/*` are limited to loopback clients when `CANARY_MANAGEMENT_API_KEY` is empty. Before remote use, set a strong value and send it as `X-Canary-API-Key`:
-
-```text
-CANARY_MANAGEMENT_API_KEY=use-a-secret-from-your-secret-store
-```
-
-```bash
-curl -H "X-Canary-API-Key: $CANARY_MANAGEMENT_API_KEY" http://127.0.0.1:8000/api/events
-```
-
-Use TLS at a trusted reverse proxy for remote deployments. Never put the key in source control, a decoy, or a URL.
-
-## Email alerts
-
-The default alert mode is `console`. To use SMTP, configure environment variables based on `.env.example`:
-
-```text
-CANARY_ALERT_MODE=email
-CANARY_ALERT_TO=security@example.com
-CANARY_SMTP_HOST=smtp.example.com
-CANARY_SMTP_PORT=587
-CANARY_SMTP_USER=...
-CANARY_SMTP_PASSWORD=...
-CANARY_SMTP_FROM=canary-alerts@example.com
-CANARY_SMTP_STARTTLS=true
-```
-
-Do not commit credentials to Git.
-
-Example email subject:
-
-```text
-[CANARY] Synthetic_Forecast.docx triggered (HIGH)
-```
-
-The body includes a short hashed canary identifier, filename, timestamp, source IP, User-Agent, triage label and duplicate state. The raw callback token is not placed in the alert body. Each persisted event records `alert_status` as `sent`, `suppressed`, `disabled`, or `failed`; failed delivery includes a bounded error message for diagnosis.
-
-## Triage logic
-
-Each callback produces a structured event:
-
-```json
-{
-  "event_type": "canary_trigger",
-  "triage_label": "Honeytoken trigger - potential unauthorized access",
-  "severity": "high"
-}
-```
-
-A small scanner heuristic reduces obvious automated requests to `medium` severity. Correlate these events with endpoint, identity, and audit telemetry during investigation.
-
-An investigation can follow this sequence:
-
-```text
-Canary fires
-   -> identify token/decoy
-   -> determine source context
-   -> correlate user + endpoint
-   -> inspect file-access/DLP events
-   -> scope related activity
-   -> decide benign scanner vs suspicious access
-   -> contain/escalate if supported by evidence
-```
-
-## API
-
-### Create token
-
-```http
-POST /api/tokens
-Content-Type: application/json
-
-{
-  "name": "Finance bait",
-  "filename": "Synthetic_Forecast.docx",
-  "severity": "high",
-  "notes": "Placed in authorized finance deception lab"
-}
-```
-
-### Generate decoy
-
-```http
-POST /api/decoys
-Content-Type: application/json
-
-{
-  "token_id": "TOKEN_ID",
-  "format": "docx",
-  "output_dir": "decoys"
-}
-```
-
-### List events
-
-```http
-GET /api/events
-```
-
-When management authentication is enabled, include `X-Canary-API-Key` on every `/api/*` request.
-
-### Disable token
-
-```http
-POST /api/tokens/TOKEN_ID/disable
-```
-
-## Docker
-
-```bash
-docker compose up --build
-```
-
-Then use `http://localhost:8000`.
-
-## Testing
-
-```bash
-pytest -q
-```
-
-The 16 tests cover callbacks, duplicate suppression, scanner triage, token disabling, management authentication, receiver routing, DOCX generation, filename validation, event redaction, local SMTP delivery, and delivery-failure isolation.
-
-## Further work
-
-- Automatic retry of failed notifications and SIEM delivery
-- Atomic duplicate suppression across receiver instances
-- Token ownership, expiry, and lifecycle audit records
-- Scanner allowlists and identity/endpoint enrichment
-- Ingress rate limits and evidence retention controls
-- Broader Word and external-content policy testing
-
-## Authorized use only
-
-Deploy decoys only in systems and networks you own or are authorized to monitor. Use synthetic bait data. Do not include real financial records, credentials or personal data in decoy documents.
+The lab used synthetic documents. Deployment is limited to systems the operator owns or is authorized to monitor.
 
 ## License
 
 MIT
-
-## Screenshots
-
-The [numbered screenshot walkthrough](docs/evidence/public/README.md) covers setup, deployment, document retrieval, triage, Sentinel, and tests. Images distinguish application captures from views of saved records. Sensitive identifiers are excluded. The [offline gallery](docs/evidence/public/index.html) opens locally with the image files alongside it.

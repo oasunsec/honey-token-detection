@@ -1,11 +1,13 @@
-# Cost and teardown
+# Resource lifecycle
 
-The deployment creates billable Azure resources, including Basic ACR, Container Apps, Storage, and Log Analytics. Check the resource group in Azure Cost Management while the lab is running; no cost measurement was captured for this validation. Teardown has not been performed.
+The deployment created billable ACR, Container Apps, Storage, and Log Analytics resources in the dedicated project resource group. No cost measurement was captured, and teardown was not performed during the recorded work.
 
-Before teardown, export the resource inventory, deployment outputs, KQL result, Sentinel alert/incident, email evidence, final security settings and cost view. Verify the resource group contains only this project. Then run:
+A cleanup script was added for `rg-canary-cloudsec-validation`. It requires `-Confirm`, requests deletion of the named group, and checks whether the group remains. Saved event and incident records were retained separately from the deployed resources.
+
+## Cleanup command
+
+Run only after checking the named group's contents and exporting any records that need to be retained:
 
 ```powershell
 .\scripts\azure\destroy.ps1 -ResourceGroup rg-canary-cloudsec-validation -Confirm
 ```
-
-The script refuses to run without `-Confirm`, deletes only the named project resource group, and verifies that the group is gone. Raw evidence remains outside Git; sanitized documentation and IaC remain redeployable.

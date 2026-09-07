@@ -1,12 +1,11 @@
-# Microsoft Sentinel validation
+# Sentinel ingestion and incident
 
-The Direct DCR declares the `Custom-CanaryHit_CL` stream and routes it to the project Log Analytics workspace. The receiver sends normalized records without raw callback secrets:
+Connected the receiver to the `Custom-CanaryHit_CL` stream through a Direct Data Collection Rule. The payload included event time, a hashed token identifier, artifact name, source metadata, classification, repeat state, and notification outcome. Raw callback tokens and request paths were excluded.
 
-`TimeGenerated`, `EventType`, `CanaryId`, `ArtifactName`, `SourceIp`, `UserAgent`, `Classification`, `FirstHit`, `RepeatCount`, `Receiver`, `NotificationStatus`, and `EventId`.
+The first ingestion attempt failed against an unresolved regional hostname. The hit remained in Table Storage with `sentinel_status=failed`. After the endpoint was changed to the value returned by the deployed DCR, four records appeared in `CanaryHit_CL`.
 
-Queries are stored in `docs/kql/`. Validate ingestion with `canary-hits.kql`, then create a scheduled Sentinel rule named **Canary document access detected** with a five-minute frequency, ten-minute lookback, threshold greater than zero, incident creation enabled, an IP entity mapping from `SourceIp`, and custom details for `CanaryId`, `ArtifactName`, `Classification`, `FirstHit`, `RepeatCount`, `NotificationStatus`, and `EventId`. The checked-in Bicep creates this rule with the same settings.
+Bicep deployed **Canary document access detected** with a five-minute frequency, ten-minute lookback, threshold greater than zero, and incident creation enabled. `SourceIp` was mapped as an IP entity. The resulting incident was recorded with severity `High` and status `New`.
 
-The receiver remains functional if Sentinel ingestion is unavailable. The durable hit remains in Table Storage and records `sentinel_status=failed` with a bounded diagnostic error for later retry or investigation.
+The repeat event reached Log Analytics with `FirstHit=false`, `RepeatCount=1`, and a suppressed notification status. The scanner event retained its medium-severity classification.
 
-
-The rule is intentionally scheduled rather than inline on the callback path. A callback must persist durable evidence and remain useful when Sentinel is temporarily unavailable; the receiver records the ingestion outcome so a failed DCR call is distinguishable from a missing event. In the validation environment, the first event recorded the expected failure from the pre-fix regional endpoint, and later events ingested successfully through the resource-specific DCR endpoint and produced a new Sentinel incident.
+The queries used for inspection are in [docs/kql](docs/kql): `canary-hits.kql`, `canary-first-hits.kql`, and `canary-repeat-hits.kql`. Saved query and incident records appear in [screenshots 09–11](docs/evidence/public/README.md#09-log-analytics-ingestion).
