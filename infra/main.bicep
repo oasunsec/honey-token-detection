@@ -261,6 +261,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = if (deployConta
             { name: 'CANARY_AZURE_DCR_STREAM_NAME', value: 'Custom-CanaryHit_CL' }
             { name: 'CANARY_RECEIVER_ONLY', value: 'true' }
             { name: 'CANARY_RECEIVER_VERSION', value: uniqueString(deployment().name) }
+            { name: 'AZURE_CLIENT_ID', value: identity.properties.clientId }
             { name: 'CANARY_ALERT_MODE', value: 'console' }
             { name: 'CANARY_TRUST_PROXY_HEADERS', value: 'true' }
           ]
