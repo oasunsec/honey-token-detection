@@ -100,8 +100,11 @@ def test_docx_relationship_and_filename_validation(tmp_path: Path):
     assert decoy.status_code == 200
     with zipfile.ZipFile(decoy.json()["path"]) as package:
         relationships = package.read("word/_rels/document.xml.rels").decode("utf-8")
+        document = package.read("word/document.xml").decode("utf-8")
     assert token["callback_url"] in relationships
     assert 'TargetMode="External"' in relationships
+    assert "Synthetic Forecast" in document
+    assert "Synthetic document used for a honey token test." in document
 
     invalid = client.post(
         "/api/tokens",
