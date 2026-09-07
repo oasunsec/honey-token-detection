@@ -1,4 +1,4 @@
-# Honey Token — screenshot walkthrough
+# Honey Token - screenshot walkthrough
 
 Project walkthrough recorded on 7 September 2026, covering setup, deployment, document retrieval, event triage, Sentinel ingestion, and tests. Word and GitHub images are application captures; Azure images use saved deployment responses and query results.
 
@@ -12,7 +12,7 @@ Account details, email addresses, source IPs, tenant/subscription identifiers, c
 
 ## 01. Purpose and architecture
 
-**Design summary** — Source: `ARCHITECTURE.md`.
+**Design summary** - Source: `ARCHITECTURE.md`.
 
 Extended the local document-token receiver with Azure Table Storage and Sentinel ingestion. Word and cloud callbacks were exercised separately.
 
@@ -20,7 +20,7 @@ Extended the local document-token receiver with Azure Table Storage and Sentinel
 
 ## 02. Starting state and baseline
 
-**Archived record, captured 2026-09-07** — Source: `00-azure-start-state.json + docs/BASELINE.md`.
+**Archived record, captured 2026-09-07** - Source: `00-azure-start-state.json + docs/BASELINE.md`.
 
 Recorded the local SQLite starting point and nine passing baseline tests before adding the Azure adapters.
 
@@ -28,7 +28,7 @@ Recorded the local SQLite starting point and nine passing baseline tests before 
 
 ## 03. Infrastructure deployment
 
-**Archived Azure deployment response** — Source: `03-bicep-final-deployment.json`.
+**Archived Azure deployment response** - Source: `03-bicep-final-deployment.json`.
 
 Deployed the Bicep resources successfully. Resource identifiers and endpoint values are omitted from the saved response.
 
@@ -36,7 +36,7 @@ Deployed the Bicep resources successfully. Resource identifiers and endpoint val
 
 ## 04. Receiver security configuration
 
-**Source configuration evidence** — Source: `infra/main.bicep`.
+**Source configuration evidence** - Source: `infra/main.bicep`.
 
 Disabled registry admin access and storage shared keys, required HTTPS, and disabled public management routes in the deployment configuration.
 
@@ -44,7 +44,7 @@ Disabled registry admin access and storage shared keys, required HTTPS, and disa
 
 ## 05. Deployed receiver health
 
-**Archived HTTP result** — Source: `09-container-app-health.json`.
+**Archived HTTP result** - Source: `09-container-app-health.json`.
 
 Requested the deployed health endpoint; it returned HTTP 200 with receiver-only mode and Azure Table Storage.
 
@@ -52,7 +52,7 @@ Requested the deployed health endpoint; it returned HTTP 200 with receiver-only 
 
 ## 06. Word renders the synthetic decoy
 
-**Microsoft Word UI capture** — Source: `Word 16.0.20326.20132`.
+**Microsoft Word UI capture** - Source: `Word 16.0.20326.20132`.
 
 Opened the generated synthetic document in Word. The local callback it produced is recorded in image 07.
 
@@ -60,7 +60,7 @@ Opened the generated synthetic document in Word. The local callback it produced 
 
 ## 07. Word callback and triage
 
-**Archived event from observed Word open** — Source: `word-viewer-result.json`.
+**Archived event from observed Word open** - Source: `word-viewer-result.json`.
 
 Captured the Office User-Agent and high-severity event when Word requested the loopback pixel.
 
@@ -68,7 +68,7 @@ Captured the Office User-Agent and high-severity event when Word requested the l
 
 ## 08. Persisted events and delivery outcomes
 
-**Archived Azure Table query** — Source: `table-events-sanitized.json`.
+**Archived Azure Table query** - Source: `table-events-sanitized.json`.
 
 Queried stored events and retained both successful delivery outcomes and the first failed ingestion attempt.
 
@@ -76,7 +76,7 @@ Queried stored events and retained both successful delivery outcomes and the fir
 
 ## 09. Log Analytics ingestion
 
-**Archived CanaryHit_CL query** — Source: `log-analytics-latest.json`.
+**Archived CanaryHit_CL query** - Source: `log-analytics-latest.json`.
 
 Queried four ingested records, including a scanner classification and a suppressed repeat notification.
 
@@ -84,7 +84,7 @@ Queried four ingested records, including a scanner classification and a suppress
 
 ## 10. Sentinel analytic rule
 
-**Archived rule configuration** — Source: `sentinel-rule.json`.
+**Archived rule configuration** - Source: `sentinel-rule.json`.
 
 Deployed a five-minute Sentinel rule with a ten-minute lookback and incident creation enabled. The query selected all callback rows; scanner and repeat rows were included.
 
@@ -92,7 +92,7 @@ Deployed a five-minute Sentinel rule with a ten-minute lookback and incident cre
 
 ## 11. Sentinel incident
 
-**Archived Sentinel incident response** — Source: `sentinel-incidents.json`.
+**Archived Sentinel incident response** - Source: `sentinel-incidents.json`.
 
 Recorded the resulting high-severity Sentinel incident. Account and resource identifiers are omitted.
 
@@ -100,7 +100,7 @@ Recorded the resulting high-severity Sentinel incident. Account and resource ide
 
 ## 12. GitHub Actions test run
 
-**GitHub UI capture** — Source: `Job 101836165394 in Actions run 34152044446`.
+**GitHub UI capture** - Source: `Job 101836165394 in Actions run 34152044446`.
 
 The main-branch Actions test job completed successfully and recorded 16 passing tests.
 
@@ -108,7 +108,7 @@ The main-branch Actions test job completed successfully and recorded 16 passing 
 
 ## 13. Local regression and SMTP delivery
 
-**Recorded test output** — Source: `tests/test_smtp_delivery.py + portfolio/pytest.txt`.
+**Recorded test output** - Source: `tests/test_smtp_delivery.py + portfolio/pytest.txt`.
 
 The integration test opened a real loopback SMTP connection, sent one DATA message after two callbacks, and confirmed two persisted events with sent/suppressed alert states. SMTP identities and callback tokens are redacted from the public record.
 
@@ -116,7 +116,7 @@ The integration test opened a real loopback SMTP connection, sent one DATA messa
 
 ## 14. Secret scanning
 
-**Gitleaks output** — Source: `portfolio/gitleaks.txt`.
+**Gitleaks output** - Source: `portfolio/gitleaks.txt`.
 
 Scanned the tracked history with Gitleaks; the recorded scan found no secrets.
 
@@ -124,7 +124,7 @@ Scanned the tracked history with Gitleaks; the recorded scan found no secrets.
 
 ## 15. Limitations and teardown status
 
-**Operational notes** — Source: `LIMITATIONS.md + COST_AND_TEARDOWN.md`.
+**Operational notes** - Source: `LIMITATIONS.md + COST_AND_TEARDOWN.md`.
 
 Recorded the resource state at the end of the run. The cleanup command and operational constraints are documented separately.
 

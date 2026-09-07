@@ -1,4 +1,4 @@
-# Starting point — 7 September 2026
+# Starting point - 7 September 2026
 
 The local FastAPI service already created and disabled tokens, generated HTML and DOCX decoys, stored callbacks in SQLite, classified scanner-like requests, suppressed repeats, and rendered console or SMTP alerts. Docker and a GitHub Actions test workflow were already present.
 
