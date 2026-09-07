@@ -1,6 +1,6 @@
 # Honey Token — screenshot walkthrough
 
-Project walkthrough recorded on 7 September 2026, covering setup, deployment, document retrieval, event triage, Sentinel ingestion, and tests. Word and GitHub images are application captures. Azure images display saved API and query records, rather than the Azure portal. No teardown was performed.
+Project walkthrough recorded on 7 September 2026, covering setup, deployment, document retrieval, event triage, Sentinel ingestion, and tests. Word and GitHub images are application captures; Azure images use saved deployment responses and query results.
 
 Account details, email addresses, source IPs, tenant/subscription identifiers, callback tokens, and resource endpoints are redacted or excluded. Raw records remain outside this package.
 
