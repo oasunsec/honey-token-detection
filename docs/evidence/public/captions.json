@@ -7,7 +7,7 @@
     "content": "Local document test\n  Generated DOCX -> Word -> loopback receiver\n  -> SQLite event -> classification -> console alert\n\nSeparate cloud test\n  Controlled HTTPS request -> Azure receiver\n  -> Table Storage event -> notification outcome\n  -> DCR -> CanaryHit_CL -> scheduled rule -> Sentinel incident",
     "meaning": "Extended the local document-token receiver with Azure Table Storage and Sentinel ingestion. Word and cloud callbacks were exercised separately.",
     "image": "01-evidence.jpg",
-    "sha256": "4f82bd6136285ef3ce09d0cba9037176d8b3fe8d5c3f6d7e08b2b676ce1c9725"
+    "sha256": "c3e2905bb008c8060e9f214c1c2ef64f15fff36d1fad4406a7847db34085009d"
   },
   {
     "number": "02",
@@ -17,7 +17,7 @@
     "content": "{\n  \"azure\": {\n    \"environmentName\": \"AzureCloud\",\n    \"state\": \"Enabled\",\n    \"isDefault\": true\n  },\n  \"baseline_tests\": \"9 passed (archived baseline report)\",\n  \"baseline_storage\": \"SQLite\",\n  \"missing_at_baseline\": \"Azure Monitor / Sentinel adapter\",\n  \"subscription\": \"[REDACTED]\",\n  \"tenant_and_operator\": \"[REDACTED]\"\n}",
     "meaning": "Recorded the local SQLite starting point and nine passing baseline tests before adding the Azure adapters.",
     "image": "02-evidence.jpg",
-    "sha256": "89b66cccb244465dc2e8faffdf329ecdc49ff6770524afa79ea6f92c6c83546b"
+    "sha256": "b157d776c9defb62a7dfda38667761e46b03c28ea3fef4cb12d68ce41f3597a0"
   },
   {
     "number": "03",
@@ -27,7 +27,7 @@
     "content": "{\n  \"location\": null,\n  \"provisioningState\": \"Succeeded\",\n  \"timestamp\": \"2026-09-07T17:24:21.173201+00:00\",\n  \"duration\": \"PT1M11.2520767S\",\n  \"mode\": \"Incremental\",\n  \"resource_count\": 15,\n  \"outputs_available\": [\n    \"containerAppFqdn\",\n    \"containerAppName\",\n    \"dcrEndpoint\",\n    \"dcrImmutableId\",\n    \"dcrName\",\n    \"receiverIdentityName\",\n    \"receiverPrincipalId\",\n    \"registryLoginServer\",\n    \"registryName\",\n    \"resourceGroupName\",\n    \"storageAccountName\",\n    \"storageTableEndpoint\",\n    \"workspaceId\",\n    \"workspaceName\"\n  ],\n  \"output_values\": \"[RESOURCE ENDPOINTS AND IDENTIFIERS OMITTED]\"\n}",
     "meaning": "Deployed the Bicep resources successfully. Resource identifiers and endpoint values are omitted from the saved response.",
     "image": "03-evidence.jpg",
-    "sha256": "e1fdc91ed8e8d3a9fdc4822f4aac659ad40b4557cda15b3a25129cd146861673"
+    "sha256": "4ee70bae0a50dc2c9eb3618e4da739a8b259a74892126e30c182eaf786434428"
   },
   {
     "number": "04",
@@ -37,7 +37,7 @@
     "content": "adminUserEnabled: false\nallowSharedKeyAccess: false\nsupportsHttpsTrafficOnly: true\ntype: 'UserAssigned'\nallowInsecure: false\n{ name: 'CANARY_RECEIVER_ONLY', value: 'true' }\n\nScoped roles: AcrPull; Storage Table Data Contributor; Monitoring Metrics Publisher.\nManagement routes return 404 in receiver-only mode.",
     "meaning": "Disabled registry admin access and storage shared keys, required HTTPS, and disabled public management routes in the deployment configuration.",
     "image": "04-evidence.jpg",
-    "sha256": "cec6b639fe57b7c69203499f243e89386941859c0e9c34b957a3b100c89c4749"
+    "sha256": "444b194283d80dba6480eaa2e3659de9a5e0e9696ef8fe29e0cfb04c866dc0d2"
   },
   {
     "number": "05",
@@ -47,7 +47,7 @@
     "content": "{\n  \"StatusCode\": 200,\n  \"body\": {\n    \"status\": \"ok\",\n    \"receiver_only\": true,\n    \"storage_backend\": \"azure_table\"\n  }\n}",
     "meaning": "Requested the deployed health endpoint; it returned HTTP 200 with receiver-only mode and Azure Table Storage.",
     "image": "05-evidence.jpg",
-    "sha256": "18cd16aa7a1c0e2df2b61e9b8005c92a61872da70e2d486720ca18b60ca05d89"
+    "sha256": "34ccefd7c68ea0b42186ff0e6064d1ad84a05e03542feec5244afed528279d2a"
   },
   {
     "number": "06",
@@ -66,7 +66,7 @@
     "content": "{\n  \"occurred_at\": \"2026-09-07T18:27:35.267154+00:00\",\n  \"source_ip\": \"[IP REDACTED]\",\n  \"user_agent\": \"Mozilla/4.0 (compatible; ms-office; MSOffice 16)\",\n  \"event_type\": \"canary_trigger\",\n  \"triage_label\": \"Honeytoken trigger - potential unauthorized access\",\n  \"severity\": \"high\",\n  \"duplicate\": 0,\n  \"alert_status\": \"sent\",\n  \"filename\": \"Synthetic_Forecast.docx\"\n}",
     "meaning": "Captured the Office User-Agent and high-severity event when Word requested the loopback pixel.",
     "image": "07-evidence.jpg",
-    "sha256": "eba50284cd0df31a5b6a52736ae8307fcc207e5feffcfa8d0f721e7ba3dffef5"
+    "sha256": "fb479d693ec5b97de24f7e82faeb45baebb63556697240a3c4a5950349afce96"
   },
   {
     "number": "08",
@@ -76,7 +76,7 @@
     "content": "[\n  {\n    \"occurred_at\": \"2026-09-07T17:55:00.808253+00:00\",\n    \"event_type\": \"canary_trigger\",\n    \"severity\": \"medium\",\n    \"duplicate\": false,\n    \"alert_status\": \"sent\",\n    \"sentinel_status\": \"sent\"\n  },\n  {\n    \"occurred_at\": \"2026-09-07T17:55:00.239828+00:00\",\n    \"event_type\": \"canary_trigger\",\n    \"severity\": \"high\",\n    \"duplicate\": false,\n    \"alert_status\": \"sent\",\n    \"sentinel_status\": \"sent\"\n  },\n  {\n    \"occurred_at\": \"2026-09-07T17:44:12.899941+00:00\",\n    \"event_type\": \"canary_trigger\",\n    \"severity\": \"high\",\n    \"duplicate\": false,\n    \"alert_status\": \"sent\",\n    \"sentinel_status\": \"sent\"\n  },\n  {\n    \"occurred_at\": \"2026-09-07T17:39:46.692930+00:00\",\n    \"event_type\": \"canary_trigger\",\n    \"severity\": \"high\",\n    \"duplicate\": false,\n    \"alert_status\": \"sent\",\n    \"sentinel_status\": \"failed\"\n  }\n]",
     "meaning": "Queried stored events and retained both successful delivery outcomes and the first failed ingestion attempt.",
     "image": "08-evidence.jpg",
-    "sha256": "c6bc2a4b100d41f79cbe5a7d529b69f6b5b30c7ef5cbad7a3749b2a21be5e4c1"
+    "sha256": "fdc5c22ea634ef39faa926d927f333c49850da0e0aaa73da7de82b4067d3586f"
   },
   {
     "number": "09",
@@ -86,7 +86,7 @@
     "content": "[\n  {\n    \"TimeGenerated\": \"2026-09-07T17:55:32.059124Z\",\n    \"EventType\": \"canary_trigger\",\n    \"Classification\": \"Honeytoken trigger - potential unauthorized access\",\n    \"FirstHit\": \"False\",\n    \"RepeatCount\": \"1\",\n    \"NotificationStatus\": \"suppressed\"\n  },\n  {\n    \"TimeGenerated\": \"2026-09-07T17:55:00.808253Z\",\n    \"EventType\": \"canary_trigger\",\n    \"Classification\": \"Possible automated scanner interaction\",\n    \"FirstHit\": \"True\",\n    \"RepeatCount\": \"0\",\n    \"NotificationStatus\": \"sent\"\n  },\n  {\n    \"TimeGenerated\": \"2026-09-07T17:55:00.239828Z\",\n    \"EventType\": \"canary_trigger\",\n    \"Classification\": \"Honeytoken trigger - potential unauthorized access\",\n    \"FirstHit\": \"True\",\n    \"RepeatCount\": \"0\",\n    \"NotificationStatus\": \"sent\"\n  },\n  {\n    \"TimeGenerated\": \"2026-09-07T17:44:12.899941Z\",\n    \"EventType\": \"canary_trigger\",\n    \"Classification\": \"Honeytoken trigger - potential unauthorized access\",\n    \"FirstHit\": \"True\",\n    \"RepeatCount\": \"0\",\n    \"NotificationStatus\": \"sent\"\n  }\n]",
     "meaning": "Queried four ingested records, including a scanner classification and a suppressed repeat notification.",
     "image": "09-evidence.jpg",
-    "sha256": "f3e03cb43778d51543085e71bf8c32656e21ecc9518554b2caf019f23781eb48"
+    "sha256": "dce81a8f0f3add2f60f241e50d063c87d814f1ed6e9b8bfe6fdc3c0d16d0cf8f"
   },
   {
     "number": "10",
@@ -96,7 +96,7 @@
     "content": "{\n  \"displayName\": \"Canary document access detected\",\n  \"enabled\": true,\n  \"severity\": \"High\",\n  \"queryFrequency\": \"PT5M\",\n  \"queryPeriod\": \"PT10M\",\n  \"triggerOperator\": \"GreaterThan\",\n  \"triggerThreshold\": 0,\n  \"query\": \"CanaryHit_CL | where TimeGenerated > ago(10m) | where EventType == \\\"canary_trigger\\\"\",\n  \"incidentConfiguration\": {\n    \"createIncident\": true,\n    \"groupingConfiguration\": {\n      \"enabled\": false,\n      \"groupByAlertDetails\": null,\n      \"groupByCustomDetails\": null,\n      \"groupByEntities\": null,\n      \"lookbackDuration\": \"PT5M\",\n      \"matchingMethod\": \"AllEntities\",\n      \"reopenClosedIncident\": false\n    }\n  }\n}",
     "meaning": "Deployed a five-minute Sentinel rule with a ten-minute lookback and incident creation enabled. The query selected all callback rows; scanner and repeat rows were included.",
     "image": "10-evidence.jpg",
-    "sha256": "e5dae74d1ab3fba40b1384d19f5b0a0f6afea6af5bf53675513b41723bfbaade"
+    "sha256": "30bdfabb12f04335124d744fa3c64cb9f9476f5ef45eda2382c7977ebb5a097d"
   },
   {
     "number": "11",
@@ -106,7 +106,7 @@
     "content": "{\n  \"title\": \"Canary document access detected\",\n  \"severity\": \"High\",\n  \"status\": \"New\",\n  \"createdTimeUtc\": \"2026-09-07T17:53:45.1566667Z\",\n  \"firstActivityTimeUtc\": \"2026-09-07T17:44:12Z\",\n  \"lastActivityTimeUtc\": \"2026-09-07T17:44:12Z\",\n  \"description\": \"Creates a Sentinel incident when the canary receiver records a document access event.\",\n  \"providerName\": \"Microsoft XDR\"\n}",
     "meaning": "Recorded the resulting high-severity Sentinel incident. Account and resource identifiers are omitted.",
     "image": "11-evidence.jpg",
-    "sha256": "69bc07751823991db78ece933092441c19d7be589b5a78d2b209b4333c0cb93a"
+    "sha256": "e94fdcccf3d5eeac19c5e5f7fb6dd2d59fe8bd266d113aef050fabaf6c2d62d8"
   },
   {
     "number": "12",
@@ -143,7 +143,7 @@
     "content": "SMTP sink transcript (redacted)\nTransport: loopback TCP SMTP sink on an ephemeral local port\nS: 220 loopback SMTP sink ready\nC: EHLO [LOCAL CLIENT]\nS: 250 OK\nC: MAIL [REDACTED]\nS: 250 OK\nC: RCPT [REDACTED]\nS: 250 OK\nC: DATA\nS: 354 End with dot\nS: 250 Accepted\nC: QUIT\nS: 221 Bye\nResult: callbacks=2 | persisted_events=2 | accepted_messages=1 | alert_statuses=suppressed,sent | raw_token_in_message=absent\n\nFull suite: 16 passed, 2 dependency warnings.",
     "meaning": "The integration test opened a real loopback SMTP connection, sent one DATA message after two callbacks, and confirmed two persisted events with sent/suppressed alert states. SMTP identities and callback tokens are redacted from the public record.",
     "image": "15-evidence.jpg",
-    "sha256": "28d4124a1b67417c91d994677e09a8a57edb9964731b325c4a651a8200d5aea9"
+    "sha256": "cf0a95a276bd4087f55dcf11e2e306f4d281ed660da31b3face1077ad5a0259e"
   },
   {
     "number": "16",
@@ -153,7 +153,7 @@
     "content": "1:52PM INF 19 commits scanned.\n1:52PM INF scanned ~142484 bytes (142.48 KB) in 1.68s\n1:52PM INF no leaks found\n",
     "meaning": "Scanned the tracked history with Gitleaks; the recorded scan found no secrets.",
     "image": "16-evidence.jpg",
-    "sha256": "8ca71265066e3be2887289c342c752f7e91ca706f4cd53267a540688823adc32"
+    "sha256": "6acebd2a60037ae15e5cdf6aca06629f6c7afa3a21ae6eb9fa55b2e3b1fa3aea"
   },
   {
     "number": "17",
@@ -163,6 +163,6 @@
     "content": "Resource lifecycle\n  Dedicated project resource group deployed\n  Scoped teardown script added with explicit confirmation\n  Teardown not performed in the recorded run\n  Cost measurement not captured\n\nOperational scope documented in LIMITATIONS.md",
     "meaning": "Recorded the resource state at the end of the run. The cleanup command and operational constraints are documented separately.",
     "image": "17-evidence.jpg",
-    "sha256": "f66527c07d3e3c288cea7694dc542dcb3c12d748500b7561bcf8dc6d77d08893"
+    "sha256": "5ad8601a088dbd28163dbd2a26e7e0cb277f39b4547a482c0a499b848f8aeed8"
   }
 ]
