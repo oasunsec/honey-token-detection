@@ -4,7 +4,7 @@ Project walkthrough recorded on 7 September 2026, covering setup, deployment, do
 
 Account details, email addresses, source IPs, tenant/subscription identifiers, callback tokens, and resource endpoints are redacted or excluded. Raw records remain outside this package.
 
-[Open the offline gallery](index.html). Image hashes are recorded in [captions.json](captions.json).
+Evidence files are stored in this folder. The offline `index.html` gallery works after downloading the folder. Image hashes are recorded in [captions.json](captions.json).
 
 ## Browse the evidence
 
