@@ -1,29 +1,22 @@
 # Architecture
 
-```mermaid
-flowchart TD
-  G[Local canary generator] --> D[Canary DOCX]
-  D --> W[Microsoft Word on controlled endpoint]
-  W --> LOCAL[Local SQLite receiver: observed Word test]
-  HTTP[Controlled HTTP requests] --> I[Azure Container Apps HTTPS ingress]
-  I --> R[Receiver-only FastAPI application]
-  R --> T[Azure Table Storage: CanaryHits]
-  R --> O[NotificationOutbox state]
-  R --> TRIAGE[Event classification and repeat decision]
-  TRIAGE --> E[Console or SMTP alert]
-  LOCAL --> LE[Stored local event and console alert]
-  R --> L[Azure Monitor Logs Ingestion API]
-  L --> DCR[Direct Data Collection Rule]
-  DCR --> C[CanaryHit_CL]
-  C --> S[Microsoft Sentinel]
-  S --> A[Scheduled analytic rule]
-  A --> N[Sentinel alert and incident]
-  MI[User-assigned managed identity] --> R
-  MI -->|AcrPull| ACR[Azure Container Registry]
-  MI -->|Storage Table Data Contributor| T
-  MI -->|Monitoring Metrics Publisher| DCR
-```
+The Azure deployment extended the local document-token receiver with Table Storage and Sentinel ingestion. The diagram shows the two paths exercised during the work.
 
-The work added the Azure branch to the existing local receiver. Controlled HTTP requests exercised the cloud path; Word exercised the separate loopback path.
+[![Honey Token: separate local Word and Azure-to-Sentinel event paths](docs/diagrams/tested-event-paths.png)](docs/diagrams/tested-event-paths.png)
 
-The handler stored events before attempting notification. SMTP failures retained a failed status and did not skip the Sentinel adapter. An absent adapter was recorded as disabled. Delivery remained synchronous; [operational limits](LIMITATIONS.md) covers retry and concurrency behavior.
+## Components and connections
+
+| Component | Connection implemented |
+| --- | --- |
+| Local generator and Word | Generated a DOCX with an external pixel; Word requested the loopback receiver |
+| Local receiver | Stored the callback in SQLite and recorded its classification and console alert outcome |
+| Azure receiver | Accepted controlled HTTPS callbacks in Container Apps; management routes returned 404 |
+| Azure Table Storage | Stored token/event data in `CanaryHits` and delivery state in `NotificationOutbox` |
+| Notification handler | Recorded console/SMTP delivery outcomes independently of Sentinel ingestion |
+| Logs Ingestion adapter | Sent normalized events through the Direct DCR into `CanaryHit_CL` |
+| Sentinel rule | Evaluated callback rows every five minutes and created a high-severity incident |
+| Managed identity | Used scoped `AcrPull`, `Storage Table Data Contributor`, and `Monitoring Metrics Publisher` roles for registry, storage, and DCR access |
+
+Events were stored before notification delivery. SMTP failures retained a failed status and did not skip the Sentinel adapter. An absent adapter was recorded as disabled.
+
+[Receiver boundaries and event fields](docs/architecture.md) · [Azure deployment](AZURE_DEPLOYMENT.md) · [Operational limits](LIMITATIONS.md)

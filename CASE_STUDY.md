@@ -4,6 +4,8 @@ The starting service generated decoy documents, stored callbacks in SQLite, and 
 
 The work was completed on 7 September 2026 using Windows 11, Python 3.13.14, and Azure in `southcentralus`.
 
+[![Honey Token: separate local Word and Azure-to-Sentinel event paths](docs/diagrams/tested-event-paths.png)](docs/diagrams/tested-event-paths.png)
+
 ## Started with the local receiver
 
 The baseline had nine passing tests. Token creation, revocation, DOCX/HTML generation, scanner classification, and duplicate suppression were already present. Azure storage and Sentinel ingestion were missing.
