@@ -240,7 +240,7 @@ Then use `http://localhost:8000`.
 pytest -q
 ```
 
-The current tests cover token triggering, duplicate suppression, scanner triage and token disabling.
+The test suite covers token triggering, duplicate suppression, scanner triage, token disabling, triage-derived console alerts, DOCX relationship generation and filename path validation.
 
 ## Suggested GitHub roadmap
 
