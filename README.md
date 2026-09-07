@@ -184,7 +184,7 @@ Example email subject:
 [CANARY] Synthetic_Forecast.docx triggered (HIGH)
 ```
 
-The body includes the token, filename, timestamp, source IP, User-Agent, triage label and duplicate state. Each persisted event records `alert_status` as `sent`, `suppressed`, `disabled`, or `failed`; failed delivery includes a bounded error message for diagnosis.
+The body includes a short hashed canary identifier, filename, timestamp, source IP, User-Agent, triage label and duplicate state. The raw callback token is not placed in the alert body. Each persisted event records `alert_status` as `sent`, `suppressed`, `disabled`, or `failed`; failed delivery includes a bounded error message for diagnosis.
 
 ## Triage logic
 
@@ -323,3 +323,4 @@ Deploy decoys only in systems and networks you own or are authorized to monitor.
 ## License
 
 MIT
+
