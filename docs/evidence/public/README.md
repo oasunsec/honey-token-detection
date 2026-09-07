@@ -1,6 +1,6 @@
 # Honey Token — validation walkthrough
 
-Validation evidence from 7 September 2026, covering setup, deployment, document retrieval, event triage, Sentinel ingestion, and tests. Word and GitHub images are application captures. Azure images display saved API and query records, rather than the Azure portal. No teardown was performed.
+Project walkthrough recorded on 7 September 2026, covering setup, deployment, document retrieval, event triage, Sentinel ingestion, and tests. Word and GitHub images are application captures. Azure images display saved API and query records, rather than the Azure portal. No teardown was performed.
 
 Account details, email addresses, source IPs, tenant/subscription identifiers, callback tokens, and resource endpoints are redacted or excluded. Raw records remain outside this package.
 
@@ -50,7 +50,7 @@ HTTP 200 with receiver-only mode and Azure Table storage in the saved deployment
 
 **Microsoft Word UI capture** — Source: `Word 16.0.20326.20132`.
 
-The generated DOCX displayed in Word. The capture excludes account controls and the cursor highlight. Image 07 contains the event recorded during the earlier local Word test.
+Word displays the generated synthetic document. The corresponding local callback event appears in image 07.
 
 ![Word renders the synthetic decoy](06-word-decoy.png)
 
@@ -126,18 +126,18 @@ The suite includes a real ephemeral loopback SMTP sink, triage-field verificatio
 
 ![Local regression and SMTP delivery](15-evidence.jpg)
 
-## 16. Secret-history verification
+## 16. Secret scanning
 
 **Gitleaks output** — Source: `portfolio/gitleaks.txt`.
 
-The tracked Git history scan passed. Live canary evidence remains private and ignored; a clean history does not imply the whole local disk has no secrets.
+Gitleaks found no secrets in the scanned Git history. Runtime tokens and raw evidence are excluded from version control.
 
-![Secret-history verification](16-evidence.jpg)
+![Secret scanning](16-evidence.jpg)
 
 ## 17. Limitations and teardown status
 
-**Documented final state** — Source: `VALIDATION_REPORT.md + COST_AND_TEARDOWN.md`.
+**Operational notes** — Source: `CASE_STUDY.md + COST_AND_TEARDOWN.md`.
 
-The repository remains private. Publishing source and operating a production service are separate decisions.
+Use the scoped teardown script to remove the lab resources after exporting any records needed for investigation.
 
 ![Limitations and teardown status](17-evidence.jpg)

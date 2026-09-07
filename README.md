@@ -1,12 +1,12 @@
 # Honey Token
 
-A self-hosted document honeytoken detector for detecting interaction with sensitive-looking decoy files in an **authorized environment**.
+Honey Token detects requests from decoy documents and turns them into triaged security events. It runs locally with SQLite or on Azure with Table Storage and Microsoft Sentinel.
 
 The project creates a unique callback token, associates it with a decoy such as `Synthetic_Forecast.docx`, records callback telemetry, performs lightweight triage, suppresses duplicate notifications, and sends an alert to the console or email.
 
-Tested with a generated DOCX in Word on Windows and, separately, with controlled HTTPS callbacks to an Azure receiver and Microsoft Sentinel. See the [validation results](VALIDATION_REPORT.md) and [compatibility matrix](COMPATIBILITY.md) for the test conditions.
+[Read the case study](CASE_STUDY.md) for the architecture, engineering decisions, and observed behavior, or [browse the screenshots](docs/evidence/public/README.md) for a visual walkthrough.
 
-## What it is
+## How it works
 
 ```text
 Decoy file
@@ -113,7 +113,7 @@ python -m app.cli create \
 
 The command returns a token ID, callback URL and generated decoy path.
 
-### 5. Validate the detector before opening the document
+### 5. Send a callback
 
 Call the callback URL returned by the CLI:
 
@@ -133,7 +133,11 @@ Open interactive API docs at:
 http://127.0.0.1:8000/docs
 ```
 
-### Azure receiver validation
+### 6. Open the document
+
+Open the generated file on a lab endpoint that can reach the callback server. Record whether the viewer actually requests the external resource. If it does not, treat that as an observed product-control limitation rather than trying to bypass the viewer's security controls.
+
+## Azure deployment
 
 The checked-in Azure path provisions a dedicated resource group with a Basic ACR, user-assigned managed identity, Consumption Container App, Standard LRS Table Storage, Log Analytics, a Direct Data Collection Rule and a Microsoft Sentinel scheduled rule. The receiver image is unchanged application code packaged in the existing `Dockerfile`; Azure switches only the storage and ingestion adapters through environment variables.
 
@@ -145,7 +149,7 @@ The checked-in Azure path provisions a dedicated resource group with a Basic ACR
 
 The deployed receiver exposes `/health` and `/t/<token>/pixel.gif`. It returns 404 for `/api/*` so management operations stay local to an authenticated operator process. The runtime uses its managed identity for ACR pull, Azure Table Storage and Logs Ingestion. It does not use storage keys, registry admin credentials, or callback secrets in the container configuration. `CanaryHit_CL` receives only a hashed canary identifier and normalized event fields.
 
-### Management API protection
+## Management API protection
 
 The callback route stays public because the token is the tripwire identifier. Management routes under `/api/*` are limited to loopback clients when `CANARY_MANAGEMENT_API_KEY` is empty. Before remote use, set a strong value and send it as `X-Canary-API-Key`:
 
@@ -158,10 +162,6 @@ curl -H "X-Canary-API-Key: $CANARY_MANAGEMENT_API_KEY" http://127.0.0.1:8000/api
 ```
 
 Use TLS at a trusted reverse proxy for remote deployments. Never put the key in source control, a decoy, or a URL.
-
-### 6. Test the DOCX in a controlled lab
-
-Open the generated file on a lab endpoint that can reach the callback server. Record whether the viewer actually requests the external resource. If it does not, treat that as an observed product-control limitation rather than trying to bypass the viewer's security controls.
 
 ## Email alerts
 
@@ -190,7 +190,7 @@ The body includes a short hashed canary identifier, filename, timestamp, source 
 
 ## Triage logic
 
-The MVP produces a structured event:
+Each callback produces a structured event:
 
 ```json
 {
@@ -200,9 +200,9 @@ The MVP produces a structured event:
 }
 ```
 
-A small scanner heuristic reduces obvious automated requests to `medium` severity. This is deliberately simple. A real environment should enrich the event with endpoint, identity and audit telemetry.
+A small scanner heuristic reduces obvious automated requests to `medium` severity. Correlate these events with endpoint, identity, and audit telemetry during investigation.
 
-A useful production workflow is:
+An investigation can follow this sequence:
 
 ```text
 Canary fires
@@ -291,6 +291,6 @@ Deploy decoys only in systems and networks you own or are authorized to monitor.
 
 MIT
 
-## Validation evidence
+## Screenshots
 
-The [numbered screenshot walkthrough](docs/evidence/public/README.md) covers the baseline, deployment, decoy, triage, SIEM, tests, and release boundary. Every image identifies whether it is a fresh application capture or a view of archived evidence. Sensitive identifiers are excluded. The [offline gallery](docs/evidence/public/index.html) opens locally with the image files alongside it.
+The [numbered screenshot walkthrough](docs/evidence/public/README.md) covers setup, deployment, document retrieval, triage, Sentinel, and tests. Images distinguish application captures from views of saved records. Sensitive identifiers are excluded. The [offline gallery](docs/evidence/public/index.html) opens locally with the image files alongside it.

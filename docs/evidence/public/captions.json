@@ -55,7 +55,7 @@
     "image": "06-word-decoy.png",
     "kind": "Microsoft Word UI capture",
     "source": "Word 16.0.20326.20132",
-    "meaning": "The generated DOCX displayed in Word. The capture excludes account controls and the cursor highlight. Image 07 contains the event recorded during the earlier local Word test.",
+    "meaning": "Word displays the generated synthetic document. The corresponding local callback event appears in image 07.",
     "sha256": "e6d8c3b9ee1680eaa450c97faae9d5c9019e22b9d4d77b634ab388f5967b5faf"
   },
   {
@@ -147,22 +147,22 @@
   },
   {
     "number": "16",
-    "title": "Secret-history verification",
+    "title": "Secret scanning",
     "source": "portfolio/gitleaks.txt",
     "kind": "Gitleaks output",
     "content": "1:52PM INF 19 commits scanned.\n1:52PM INF scanned ~142484 bytes (142.48 KB) in 1.68s\n1:52PM INF no leaks found\n",
-    "meaning": "The tracked Git history scan passed. Live canary evidence remains private and ignored; a clean history does not imply the whole local disk has no secrets.",
+    "meaning": "Gitleaks found no secrets in the scanned Git history. Runtime tokens and raw evidence are excluded from version control.",
     "image": "16-evidence.jpg",
-    "sha256": "f33e6c4e3549def6046cd6c0cc3918da8a0c4df6c289843a55163fd4a1a252f9"
+    "sha256": "790ba9afedc943f32011a7cd057e94e549a48d325792e3a041193933dd5aae93"
   },
   {
     "number": "17",
     "title": "Limitations and teardown status",
-    "source": "VALIDATION_REPORT.md + COST_AND_TEARDOWN.md",
-    "kind": "Documented final state",
-    "content": "Validation completed: experimental detection project\n\nProduction limits:\n- callback may be blocked or offline\n- scanner requests can cause false positives\n- source IP is not identity\n- no automatic delivery retry worker\n- rate limits, retention and integrity need deployment controls\n\nTeardown was not performed.",
-    "meaning": "The repository remains private. Publishing source and operating a production service are separate decisions.",
+    "source": "CASE_STUDY.md + COST_AND_TEARDOWN.md",
+    "kind": "Operational notes",
+    "content": "Deployment considerations:\n- callback may be blocked or offline\n- scanner requests can cause false positives\n- source IP is not identity\n- no automatic delivery retry worker\n- rate limits, retention and integrity need deployment controls\n\nTeardown was not performed.",
+    "meaning": "Use the scoped teardown script to remove the lab resources after exporting any records needed for investigation.",
     "image": "17-evidence.jpg",
-    "sha256": "e62b439a3bf05586c1c20481c1712e04bb4bbc557f0bb6934fa0df1746b5a097"
+    "sha256": "41f16143909acd11918e1cf2a0849a5bb26ec4999b1a20bd0d630230e591e13c"
   }
 ]
