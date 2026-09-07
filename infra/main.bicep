@@ -256,7 +256,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = if (deployConta
             { name: 'CANARY_AZURE_STORAGE_ACCOUNT_URL', value: 'https://${storage.name}.table.${environment().suffixes.storage}' }
             { name: 'CANARY_AZURE_TABLE_HITS', value: 'CanaryHits' }
             { name: 'CANARY_AZURE_TABLE_OUTBOX', value: 'NotificationOutbox' }
-            { name: 'CANARY_AZURE_DCR_ENDPOINT', value: 'https://${toLower(location)}-1.ingest.monitor.azure.com' }
+            { name: 'CANARY_AZURE_DCR_ENDPOINT', value: dcr.properties.endpoints.logsIngestion }
             { name: 'CANARY_AZURE_DCR_IMMUTABLE_ID', value: dcr.properties.immutableId }
             { name: 'CANARY_AZURE_DCR_STREAM_NAME', value: 'Custom-CanaryHit_CL' }
             { name: 'CANARY_RECEIVER_ONLY', value: 'true' }
@@ -291,6 +291,53 @@ resource sentinelOnboarding 'Microsoft.SecurityInsights/onboardingStates@2023-02
   properties: {}
 }
 
+resource analyticRule 'Microsoft.SecurityInsights/alertRules@2023-02-01' = {
+  name: guid(workspace.id, 'canary-document-access-detected')
+  scope: workspace
+  dependsOn: [ sentinelOnboarding, customTable ]
+  kind: 'Scheduled'
+  properties: {
+    displayName: 'Canary document access detected'
+    description: 'Creates a Sentinel incident when the canary receiver records a document access event.'
+    enabled: true
+    severity: 'High'
+    query: 'CanaryHit_CL | where TimeGenerated > ago(10m) | where EventType == "canary_trigger"'
+    queryFrequency: 'PT5M'
+    queryPeriod: 'PT10M'
+    triggerOperator: 'GreaterThan'
+    triggerThreshold: 0
+    suppressionEnabled: false
+    suppressionDuration: 'PT5M'
+    tactics: [ 'Collection' ]
+    techniques: []
+    incidentConfiguration: {
+      createIncident: true
+      groupingConfiguration: {
+        enabled: false
+        matchingMethod: 'AllEntities'
+        reopenClosedIncident: false
+        lookbackDuration: 'PT5M'
+      }
+    }
+    entityMappings: [
+      {
+        entityType: 'IP'
+        fieldMappings: [
+          { identifier: 'Address', columnName: 'SourceIp' }
+        ]
+      }
+    ]
+    customDetails: {
+      CanaryId: 'CanaryId'
+      ArtifactName: 'ArtifactName'
+      Classification: 'Classification'
+      FirstHit: 'FirstHit'
+      RepeatCount: 'RepeatCount'
+      NotificationStatus: 'NotificationStatus'
+      EventId: 'EventId'
+    }
+  }
+}
 output resourceGroupName string = resourceGroup().name
 output registryName string = acr.name
 output registryLoginServer string = acr.properties.loginServer
@@ -300,7 +347,8 @@ output workspaceName string = workspace.name
 output workspaceId string = workspace.id
 output dcrName string = dcr.name
 output dcrImmutableId string = dcr.properties.immutableId
-output dcrEndpoint string = 'https://${toLower(location)}-1.ingest.monitor.azure.com'
+output dcrEndpoint string = dcr.properties.endpoints.logsIngestion
+output analyticRuleName string = analyticRule.name
 output receiverIdentityName string = identity.name
 output receiverPrincipalId string = identity.properties.principalId
 output containerAppName string = deployContainerApp ? containerApp.name : ''

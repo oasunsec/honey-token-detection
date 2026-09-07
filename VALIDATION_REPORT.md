@@ -1,72 +1,101 @@
 # Validation report
 
-**Run date:** 2026-09-07  
-**Environment:** Windows 11, Python 3.13.14, private working copy  
-**Scope:** Authorized local lab validation of the canary-honeytoken MVP
+**Run date:** 2026-09-07
+**Environment:** Windows 11, Python 3.13.14, Azure `southcentralus`, private GitHub repository
+**Scope:** Authorized defensive canary validation from the existing MVP codebase
 
 ## Executive result
 
-The core hypothesis was demonstrated in a local lab. A generated decoy callback returned the transparent GIF, created a SQLite event, ran the triage rule, produced an alert from the triaged event, and left the event available through `/api/events`. Console alerting and delivery to a loopback SMTP test sink both worked, with the persisted event recording `alert_status=sent`. Duplicate callbacks remained persisted while only the first matching event was alert-worthy. An obvious scanner User-Agent was classified as medium severity. Disabled tokens returned 404. Management routes now require the configured API key for remote use and record alert failures as evidence.
+The cloud validation path now proves the requested core flow end to end:
 
-The DOCX packages contained the intended unique external relationship, but no Microsoft Word or LibreOffice viewer was installed in this environment, so viewer-side retrieval was not tested. The callback therefore must not be treated as guaranteed for every document open.
+`DOCX callback -> public HTTPS Container App -> Azure Table Storage event -> triage -> console alert decision -> DCR ingestion -> CanaryHit_CL -> scheduled Sentinel rule -> Sentinel incident`
+
+The Azure receiver returned HTTP 200 with the transparent GIF, persisted the event in the project Table Storage, ran the existing triage code, emitted the normal console alert, sent a normalized record through the resource-specific DCR endpoint, and produced a Sentinel incident. The receiver also preserved evidence when the first DCR configuration was wrong: that event remains durable with `sentinel_status=failed` and a bounded DNS error. The endpoint was corrected to use the DCR endpoint emitted by Azure, and subsequent events ingested successfully.
+
+The repository remains private. No real SMTP credentials, Azure storage keys, registry admin credentials, or callback token were committed. The original local source copies were not modified or deleted.
 
 ## Tests and observed results
 
 | Check | Result |
 | --- | --- |
-| Dependency installation | Passed in `.venv` with `requirements.txt` |
-| `pytest -q` | **9 passed, 2 deprecation warnings** after configuring an ignored repo-local pytest temp root |
-| FastAPI process | Uvicorn started successfully on loopback |
-| `/health` | HTTP 200, `{"status":"ok"}` |
-| Required decoy names | Created `Synthetic_Forecast.docx` and `Executive_Bonus_2027.docx` with the CLI |
-| Callback response | HTTP 200 with `image/gif` and no-cache headers |
-| Event persistence | SQLite row with `event_type=canary_trigger`, UTC time, token, path, source IP and User-Agent |
-| Triage | Normal lab request classified high with `Honeytoken trigger - potential unauthorized access` |
-| Console alert | Printed the filename, severity, event time, source IP, User-Agent, token, and triage reason |
-| Duplicate suppression | Both callbacks were logged; the second event had `duplicate=1` and did not emit a second alert |
-| Scanner heuristic | `curl/8.10` was classified `Possible automated scanner interaction` with medium severity |
-| Token disable | Disabled token callback returned HTTP 404 |
-| DOCX package | Both `word/_rels/document.xml.rels` files contained the correct unique callback URL with `TargetMode="External"` |
-| Management protection | Missing key returned 401 when configured; remote access without a key returned 503; valid key returned 200; `/health` stayed public |
-| Alert outcome evidence | Events recorded `sent`, `suppressed`, `disabled`, or `failed`; a safe SMTP failure test persisted the bounded error |
+| Dependency installation | Passed in `.venv` from `requirements.txt` |
+| `pytest -q` | **13 passed, 2 deprecation warnings** |
+| Bicep compile | Passed; only known BCP318 nullable conditional output warning remains |
+| Azure resource deployment | Passed for the dedicated project resource group |
+| Managed identity RBAC | Verified `AcrPull`, `Storage Table Data Contributor`, and `Monitoring Metrics Publisher` on project scopes |
+| Runtime identity cleanup | Temporary local operator Table role removed after seeding and inspection; remaining count verified as zero |
+| Public `/health` | HTTP 200; receiver reports `receiver_only=true` and `storage_backend=azure_table` |
+| Public management API | `/api/events` returned HTTP 404 from the receiver-only Container App |
+| Office-like callback | HTTP 200 with 34-byte `image/gif`; Azure event persisted, triaged high, console alert sent, DCR status sent |
+| Scanner callback | HTTP 200; `curl/8.10.1` classified `Possible automated scanner interaction` with medium severity, alert sent, DCR status sent |
+| Duplicate callback | HTTP 200; event persisted with `duplicate=true`, alert status `suppressed`, DCR row `FirstHit=false`, `RepeatCount=1` |
+| Disabled token | HTTP 404; token was re-enabled after the negative test |
+| Azure Table evidence | Five events persisted, including the initial DCR failure and four post-fix events |
+| Log Analytics evidence | Four post-fix rows present in `CanaryHit_CL` with normalized fields and no raw callback token |
+| Sentinel analytic rule | Deployed as `Canary document access detected`, five-minute frequency, ten-minute lookback, incident creation enabled |
+| Sentinel incident | A new incident was observed with title `Canary document access detected`, severity `High`, and status `New` |
+| DOCX package | OOXML relationship pointed to the unique token callback with `TargetMode="External"` |
+| Word/LibreOffice viewer | Not executed; no compatible viewer was available on this validation host |
+| Local SMTP test | Passed against an ephemeral loopback sink through the normal triage and alert path; no external mailbox or credential used |
+| Azure SMTP alert | Not configured; Azure validation used console alerts and recorded that limitation |
 
-The first unmodified `pytest -q` attempt hit `PermissionError: [WinError 5]` while pytest scanned the host's ACL-protected `C:\Users\oasun\AppData\Local\Temp\pytest-of-oasun`. The repository now uses `.pytest-tmp/`, which is ignored and makes the documented command pass on this host. This was an environment failure rather than an application test failure.
+The first unmodified local `pytest -q` attempt previously hit a host ACL error while pytest scanned `C:\Users\oasun\AppData\Local\Temp\pytest-of-oasun`. The repository uses an ignored `.pytest-tmp/` root so the documented command runs reliably on this host. That was an environment failure, not an application assertion failure.
+
+## Cloud flow evidence
+
+The dedicated resource group was `rg-canary-cloudsec-validation` in `southcentralus`. It contains the project ACR, managed identity, Container Apps environment and receiver, Standard LRS Table Storage, Log Analytics workspace, `CanaryHit_CL`, Direct DCR, Sentinel onboarding, and the scheduled analytic rule.
+
+The first callback used the pre-fix regional hostname and persisted a failure with:
+
+```text
+Failed to resolve 'southcentralus-1.ingest.monitor.azure.com'
+```
+
+The Bicep deployment now injects `dcr.properties.endpoints.logsIngestion`, which resolved to the resource-specific DCR endpoint. The next four events were accepted by the DCR and appeared in `CanaryHit_CL`. This failure was fixed in code and retained in the evidence record rather than removed.
+
+The normalized Log Analytics payload contains `TimeGenerated`, `EventType`, hashed `CanaryId`, `ArtifactName`, `SourceIp`, `UserAgent`, `Classification`, `FirstHit`, `RepeatCount`, `Receiver`, `NotificationStatus`, and `EventId`. The raw callback token and request path are not sent to the DCR.
 
 ## SMTP result
 
-SMTP rendering and delivery were tested against a temporary loopback SMTP server implemented only for this validation run. It listened on `127.0.0.1` on an ephemeral port, accepted the message for `qa-inbox@local.test`, and captured it in memory. STARTTLS and authentication were disabled for this isolated sink; no real mailbox, password, API key, or external SMTP provider was used. The received message contained the decoy filename, severity, event time, source IP, User-Agent, token identifier, and triage reason. The alert went through the normal triage and duplicate decision path.
+The local SMTP test used an ephemeral loopback server that accepted a message for `qa-inbox@local.test` and captured it in memory. STARTTLS and authentication were disabled only for this isolated sink. The message contained the filename, severity, event time, source IP, User-Agent, hashed canary identifier, and triage reason. Azure was intentionally left in console-alert mode because no real mailbox or SMTP secret was supplied.
 
 ## DOCX behavior
 
-The generated OOXML relationship was inspected directly from each ZIP package and pointed to that token's callback URL. No compatible Word or LibreOffice viewer was available on the validation host, so whether a viewer requested the URL was not observed. Protected View, external-content policy, proxies, firewalls, offline hosts, and viewer behavior can block the request; no control was bypassed.
+The generated DOCX package was inspected as an OOXML ZIP. Its external relationship targeted the token-specific callback URL and used `TargetMode="External"`. A Microsoft Word or LibreOffice viewer was not installed, so viewer-side retrieval was not observed. Protected View, Office external-content policy, proxies, firewalls, offline hosts, and viewer behavior can prevent a callback; no control was bypassed.
 
 ## False positives and limitations
 
-- A scanner or link-protection service can request the resource. The simulated `curl/8.10` request was recorded and downgraded to medium, but it still produced an alert because the MVP treats medium events as alert-worthy.
-- Preview services, sandboxes, authorized administrators, NAT gateways, VPNs, proxies, and DNS/security infrastructure can generate events or obscure the originating identity.
-- A callback proves that the unique resource was requested. It does not prove that a human opened the file, that data was exfiltrated, or that the source IP identifies an attacker.
-- An offline or air-gapped host, copied file, or viewer that blocks external content may never produce a callback.
-- The callback endpoint intentionally has no authentication; the token is the tripwire identifier. Management routes require `X-Canary-API-Key` when configured and otherwise accept loopback clients only; role separation and rate limiting are still absent.
-- SMTP connection or authentication failure still causes the callback request to fail so delivery problems are visible, but the event now persists `alert_status=failed` and a bounded error for diagnosis.
+- Security scanners and link-protection services can request the resource. The scanner test was downgraded to medium but remained alert-worthy by design.
+- Preview services, sandboxes, administrators, NAT gateways, VPNs, proxies, and DNS/security infrastructure can create events or obscure the originating identity.
+- A callback proves that the unique resource was requested. It does not prove a human opened the document, that data was read, or that data was exfiltrated.
+- Offline or air-gapped hosts, copied files, and viewers that block external content may never produce a callback.
+- The callback endpoint is intentionally unauthenticated because the token is the tripwire. The public receiver has no rate limiter, custom domain, WAF, gateway, or separate management plane.
+- Table Storage is durable project evidence, not a tamper-evident forensic archive. The outbox is persisted but no retry worker was added.
+- Azure SMTP delivery was not exercised; console delivery was used for the cloud run.
+- The scheduled Sentinel rule adds evaluation delay of up to its five-minute frequency and depends on Log Analytics ingestion.
 
-## Security weaknesses and changes
+## Security changes and remaining weaknesses
 
-The management API now has an API-key/loopback boundary, but still needs role separation, rotation through a secret store, rate limiting, TLS deployment, and a management audit trail before exposure beyond a controlled lab. SQLite is a local evidence store, not an encrypted or tamper-evident archive. Retention, access control, and backup protection still belong to the deployment. `CANARY_TRUST_PROXY_HEADERS` must only be enabled behind a trusted proxy. Filename path components are rejected to prevent decoy generation from escaping its selected output directory; the output directory itself must still be controlled by the operator.
+The Azure runtime uses a user-assigned managed identity. Storage shared-key access and ACR admin credentials are disabled. Management routes are unavailable in receiver-only mode, and provisioning remains local. The DCR payload excludes raw callback secrets. A failed alert or failed DCR call is persisted with a bounded diagnostic rather than dropping the event.
 
-The project does not provide encryption, DLP, least privilege, endpoint controls, removable-media controls, or SIEM correlation. Those controls remain necessary prevention and investigation layers.
+Remaining work before a public or non-lab deployment includes a real secret-store-backed management policy, rate limiting, trusted proxy/TLS guidance, retention and integrity controls, scanner allowlisting, a controlled Word/Office viewer test, and operational alert retry. The project still does not provide encryption, DLP, EDR, endpoint controls, removable-media controls, or identity correlation.
 
 ## Git and secret-history review
 
-The working tree and every committed revision were inspected with Git status, `git diff --check`, history-aware pattern searches, and review of tracked paths. No real credentials, `.env` files, runtime databases, logs, generated decoys, virtual environments, or local caches are tracked. `.gitignore` covers those classes. `gitleaks` was not installed, so the history check was manual and documented here.
+The working tree, tracked paths, and commit history were checked with `git status`, `git diff --check`, history-aware pattern searches, and review of ignored classes. Runtime databases, raw tokens, DOCX evidence, logs, `.env` files, virtual environments, caches, deployment parameter files, and `evidence-private/` are ignored and absent from the tracked set. `gitleaks` was not installed, so the history review was manual and is recorded as a limitation.
 
 ## GitHub result
 
-The repository is private at [oasunsec/canary-honeytoken-detection](https://github.com/oasunsec/canary-honeytoken-detection), with `main` tracking the pushed local branch. GitHub verified `private=true` before the first push. The first Actions run failed during test collection because the `pytest` executable did not include the repository root on `sys.path` (`ModuleNotFoundError: No module named 'app'`); that failure was reproduced locally and fixed with `pythonpath = .` in `pytest.ini`. The corrective commit `7cd171e` passed the exact CI command in [Actions run 34098455507](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34098455507). The hardening commit `d96ca84` also passed all jobs in [Actions run 34127633229](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34127633229). The earlier failed run remains visible as [34098248436](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34098248436) and is explained here rather than hidden.
+The repository is private at [oasunsec/canary-honeytoken-detection](https://github.com/oasunsec/canary-honeytoken-detection). The earlier all-jobs failure was a test-collection import-path problem (`ModuleNotFoundError: No module named 'app'`); `pytest.ini` now sets `pythonpath = .`, and the feature branch run for commit `7427aab` passed all jobs in [Actions run 34148126782](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34148126782). The final documentation and infrastructure changes in this working tree must pass one more Actions run after the next commit and push; that result will be recorded before completion.
+
+## Teardown
+
+The project-specific teardown script is prepared but has not been run. It requires an explicit `-Confirm` flag and deletes only `rg-canary-cloudsec-validation`. The resource inventory, Log Analytics query output, Sentinel incident, Table evidence, and GitHub status should be retained before any teardown decision.
 
 ## Recommendation
 
-Continue the project as a private defensive-security MVP. Before any public release or non-lab deployment, add management-plane authentication and authorization, TLS and trusted-proxy guidance, alert-delivery evidence, retention/integrity controls, a trusted scanner policy, and a controlled Word/Office viewer test. The current evidence supports code review of the MVP; it does not support treating a callback as guaranteed detection or using the service as a standalone preventive control.
+Keep the repository private and treat this as a cloud-security validation MVP. It is suitable for private review and redeployment from source, but the untested Word viewer path, absent Azure SMTP delivery, public unauthenticated callback, scanner false positives, and manual secret-history review prevent a public release claim.
 
 ## Final release status
 
-`READY_FOR_PUBLIC_REVIEW`
+`NOT_READY_FOR_PUBLIC`

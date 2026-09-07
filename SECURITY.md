@@ -12,3 +12,14 @@ This repository is intended for authorized defensive-security testing and decept
 - Alert failures are recorded on the event with a bounded error string, but the event store is not tamper-evident and should be protected and retained according to deployment policy.
 
 Report defects privately to the repository owner before public disclosure.
+
+
+## Azure receiver controls
+
+The Azure deployment uses a user-assigned managed identity. The identity is granted only `AcrPull` on the project registry, `Storage Table Data Contributor` on the project storage account, and `Monitoring Metrics Publisher` on the project Data Collection Rule. Storage shared-key access and ACR admin credentials are disabled.
+
+The public Container App runs with `CANARY_RECEIVER_ONLY=true`: health and callback routes remain available, while management routes return 404. Provisioning and token lifecycle actions stay in the local operator process. The callback persists the event in Azure Table Storage before attempting Logs Ingestion, and a DCR failure is recorded as `sentinel_status=failed` without discarding the durable event.
+
+The DCR payload excludes the raw callback token and request path. It carries a short SHA-256 canary identifier, artifact name, source metadata, triage classification, duplicate decision, alert outcome, and event ID. Raw tokens and raw evidence must remain in ignored, access-controlled local storage.
+
+The Sentinel rule is scheduled and creates an incident for `CanaryHit_CL` canary-trigger rows. This is detection plumbing; it does not establish user identity, prove a human opened the document, or replace endpoint and identity telemetry.

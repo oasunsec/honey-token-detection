@@ -25,12 +25,13 @@ az deployment group create @baseArgs --name canary-base --output json | Tee-Obje
 $outputs = az deployment group show --resource-group $ResourceGroup --name canary-base --query properties.outputs --output json | ConvertFrom-Json
 $acrName = $outputs.registryName.value
 $acrLoginServer = $outputs.registryLoginServer.value
-az acr build --registry $acrName --image "receiver:$ImageTag" --file (Join-Path $repo 'Dockerfile') $repo --output none
+az acr build --registry $acrName --image "receiver:$ImageTag" --file (Join-Path $repo 'Dockerfile') $repo --no-logs --output json | Tee-Object (Join-Path $evidence '04-acr-build.json')
 
 $image = "$acrLoginServer/receiver:$ImageTag"
 $finalArgs = @('--resource-group', $ResourceGroup, '--template-file', (Join-Path $repo 'infra/main.bicep'), '--parameters', "location=$Location", "projectPrefix=$ProjectPrefix", "containerImage=$image", 'deployContainerApp=true')
 az deployment group create @finalArgs --name canary-final --output json | Tee-Object (Join-Path $evidence '03-bicep-final-deployment.json')
-az containerapp show --resource-group $ResourceGroup --name $outputs.containerAppName.value --output json | Tee-Object (Join-Path $evidence '07-container-app-overview.json')
+$appName = "$ProjectPrefix-receiver"
+az containerapp show --resource-group $ResourceGroup --name $appName --output json | Tee-Object (Join-Path $evidence '07-container-app-overview.json')
 az acr repository show --name $acrName --image "receiver:$ImageTag" --output json | Tee-Object (Join-Path $evidence '04-container-image.json')
 
 Write-Host "Deployed image: $image"

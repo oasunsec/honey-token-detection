@@ -13,7 +13,7 @@ Decoy file
    v
 FastAPI token endpoint
    |
-   +--> SQLite event log
+   +--> SQLite or Azure Table evidence
    |
    +--> Triage rule
    |
@@ -26,7 +26,7 @@ This is a **detective deception control**. It does not replace encryption, acces
 
 - Unique cryptographically random token per decoy
 - Public callback endpoint returning a transparent 1x1 GIF
-- Token metadata stored in SQLite
+- Token metadata stored in SQLite locally or Azure Table Storage in the receiver deployment
 - HTML decoy generator
 - DOCX decoy generator using an external image relationship
 - Source IP, User-Agent, timestamp, token and filename logging
@@ -130,6 +130,18 @@ Open interactive API docs at:
 ```text
 http://127.0.0.1:8000/docs
 ```
+
+### Azure receiver validation
+
+The checked-in Azure path provisions a dedicated resource group with a Basic ACR, user-assigned managed identity, Consumption Container App, Standard LRS Table Storage, Log Analytics, a Direct Data Collection Rule and a Microsoft Sentinel scheduled rule. The receiver image is unchanged application code packaged in the existing `Dockerfile`; Azure switches only the storage and ingestion adapters through environment variables.
+
+```powershell
+.\scripts\azure\preflight.ps1
+.\scripts\azure\deploy.ps1
+.\scripts\azure\validate.ps1
+```
+
+The deployed receiver exposes `/health` and `/t/<token>/pixel.gif`. It returns 404 for `/api/*` so management operations stay local to an authenticated operator process. The runtime uses its managed identity for ACR pull, Azure Table Storage and Logs Ingestion. It does not use storage keys, registry admin credentials, or callback secrets in the container configuration. `CanaryHit_CL` receives only a hashed canary identifier and normalized event fields.
 
 ### Management API protection
 
