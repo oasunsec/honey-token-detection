@@ -13,10 +13,10 @@ class AzureTableDatabase:
     def __init__(self, account_url: str, hits_table: str = "CanaryHits", outbox_table: str = "NotificationOutbox"):
         credential = DefaultAzureCredential(exclude_interactive_browser_credential=True)
         self.service = TableServiceClient(endpoint=account_url, credential=credential)
+        self.service.create_table_if_not_exists(hits_table)
+        self.service.create_table_if_not_exists(outbox_table)
         self.hits = self.service.get_table_client(hits_table)
         self.outbox = self.service.get_table_client(outbox_table)
-        self.hits.create_table_if_not_exists()
-        self.outbox.create_table_if_not_exists()
 
     def create_token(self, token_id: str, name: str, filename: str, severity: str, notes: str = "") -> dict:
         entity = {
