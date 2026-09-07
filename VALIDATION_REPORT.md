@@ -59,7 +59,7 @@ The working tree and every committed revision were inspected with Git status, `g
 
 ## GitHub result
 
-The repository is being created and maintained as a **private** GitHub repository under `oasunsec`. This report will be updated with the final repository URL, visibility check, pushed branch, and Actions result before the final push.
+The repository is private at [oasunsec/canary-honeytoken-detection](https://github.com/oasunsec/canary-honeytoken-detection), with `main` tracking the pushed local branch. GitHub verified `private=true` before the first push. The first Actions run failed during test collection because the `pytest` executable did not include the repository root on `sys.path` (`ModuleNotFoundError: No module named 'app'`); that failure was reproduced locally and fixed with `pythonpath = .` in `pytest.ini`. The corrective commit `7cd171e` passed the exact CI command in [Actions run 34098455507](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34098455507). The earlier failed run remains visible as [34098248436](https://github.com/oasunsec/canary-honeytoken-detection/actions/runs/34098248436) and is explained here rather than hidden.
 
 ## Recommendation
 
