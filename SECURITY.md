@@ -10,12 +10,11 @@ The public Container App runs with `CANARY_RECEIVER_ONLY=true`: health and callb
 
 The DCR payload excludes the raw callback token and request path. It carries a short SHA-256 canary identifier, artifact name, source metadata, triage classification, duplicate decision, alert outcome, and event ID. Raw tokens and raw evidence must remain in ignored, access-controlled local storage.
 
-The Sentinel rule is scheduled and creates an incident for `CanaryHit_CL` canary-trigger rows. The recorded incident did not establish user identity or document exfiltration.
+The scheduled Sentinel rule created an incident from `CanaryHit_CL` callback rows. Its filtering and severity behavior are recorded in [SENTINEL.md](SENTINEL.md).
 
 ## Deployment requirements
 
-Production operations require deployment-specific ingress rate limits, retention, monitoring
-of failed delivery, and identity correlation. Do not expose local management
+The deployment scope and remaining controls are recorded in [LIMITATIONS.md](LIMITATIONS.md). Do not expose local management
 through a loopback reverse proxy without an API key: the local-only fallback
 identifies the immediate peer. Only enable forwarded-header trust behind an
 explicitly trusted proxy that replaces client-supplied forwarding headers.

@@ -11,8 +11,8 @@ Deployed the receiver into `rg-canary-cloudsec-validation` in `southcentralus`. 
 | Log Analytics | `CanaryHit_CL` custom table and Direct DCR |
 | Sentinel | Scheduled rule with incident creation enabled |
 
-The receiver's health endpoint returned 200 with `receiver_only=true` and `storage_backend=azure_table`. The public `/api/events` route returned 404. The temporary operator Table role used during provisioning was removed after inspection; the remaining assignment count was zero.
+The receiver's health endpoint returned 200 with `receiver_only=true` and `storage_backend=azure_table`. The public `/api/events` route returned 404. The temporary operator Table role used during provisioning was removed after inspection; the remaining count for that temporary operator assignment was zero.
 
-The first DCR endpoint failed DNS resolution. The Bicep output was changed to use the deployed rule's `logsIngestion` endpoint, and subsequent records reached Log Analytics. The deployment used the Azure-provided HTTPS hostname; no custom domain, WAF, or private endpoint was configured.
+The first DCR endpoint failed DNS resolution. The Bicep output was changed to use the deployed rule's `logsIngestion` endpoint, and subsequent records reached Log Analytics. The deployment used the Azure-provided HTTPS hostname. [Operational limits](LIMITATIONS.md) records the ingress scope.
 
 [Deployment commands](docs/SETUP.md#azure-deployment) · [Sentinel outcome](SENTINEL.md) · [Teardown](COST_AND_TEARDOWN.md)

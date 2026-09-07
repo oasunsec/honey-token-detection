@@ -1,6 +1,6 @@
 # Run Honey Token
 
-Run these commands from the repository root. The local example uses synthetic documents and a loopback receiver.
+Run these commands from the repository root. The local example uses synthetic documents and a loopback receiver. In Windows PowerShell, use `curl.exe` wherever the Bash examples use `curl`.
 
 ## Quick start
 
@@ -34,6 +34,8 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --no-access-log
 ```
 
+Leave the API running. Open a second terminal in the repository root and activate the same virtual environment for the remaining commands.
+
 Check:
 
 ```bash
@@ -48,11 +50,8 @@ Expected:
 
 ### 4. Create a financial-document decoy
 
-```bash
-python -m app.cli create \
-  --name "Finance bait" \
-  --filename "Synthetic_Forecast.docx" \
-  --format docx
+```text
+python -m app.cli create --name "Finance bait" --filename "Synthetic_Forecast.docx" --format docx
 ```
 
 The command returns a token ID, callback URL and generated decoy path.
@@ -62,7 +61,7 @@ The command returns a token ID, callback URL and generated decoy path.
 Call the callback URL returned by the CLI:
 
 ```bash
-curl -A "Lab-Validation" "http://127.0.0.1:8000/t/YOUR_TOKEN/pixel.gif" -o /dev/null
+curl -A "Lab-Validation" "http://127.0.0.1:8000/t/YOUR_TOKEN/pixel.gif" --output pixel.gif
 ```
 
 You should see a console alert and an event in:
@@ -79,19 +78,21 @@ http://127.0.0.1:8000/docs
 
 ### 6. Open the document
 
-Open the generated file on a lab endpoint that can reach the callback server. Record whether the viewer actually requests the external resource. If it does not, treat that as an observed product-control limitation rather than trying to bypass the viewer's security controls.
+Open the generated file on the same machine as the loopback receiver. If the viewer loads external content, its pixel request will appear in `/api/events`. Viewer coverage is recorded in [COMPATIBILITY.md](../COMPATIBILITY.md). Leave Office and endpoint security policies in place.
 
 ## Azure deployment
 
-The checked-in Azure path provisions a dedicated resource group with a Basic ACR, user-assigned managed identity, Consumption Container App, Standard LRS Table Storage, Log Analytics, a Direct Data Collection Rule and a Microsoft Sentinel scheduled rule. The receiver image is unchanged application code packaged in the existing `Dockerfile`; Azure switches only the storage and ingestion adapters through environment variables.
+Install Azure CLI, sign in, and select the intended subscription before running the scripts:
 
 ```powershell
+az login
+az account set --subscription '<subscription name or id>'
 .\scripts\azure\preflight.ps1
 .\scripts\azure\deploy.ps1
 .\scripts\azure\validate.ps1
 ```
 
-The deployed receiver exposes `/health` and `/t/<token>/pixel.gif`. It returns 404 for `/api/*` so management operations stay local to an authenticated operator process. The runtime uses its managed identity for ACR pull, Azure Table Storage and Logs Ingestion. It does not use storage keys, registry admin credentials, or callback secrets in the container configuration. `CanaryHit_CL` receives only a hashed canary identifier and normalized event fields.
+The scripts create billable resources. [AZURE_DEPLOYMENT.md](../AZURE_DEPLOYMENT.md) records the deployed components; [COST_AND_TEARDOWN.md](../COST_AND_TEARDOWN.md) contains the cleanup command. The Azure receiver exposes health and callback routes; management operations remain local.
 
 ## Management API protection
 
@@ -101,15 +102,23 @@ The callback route stays public because the token is the tripwire identifier. Ma
 CANARY_MANAGEMENT_API_KEY=use-a-secret-from-your-secret-store
 ```
 
+Bash:
+
 ```bash
 curl -H "X-Canary-API-Key: $CANARY_MANAGEMENT_API_KEY" http://127.0.0.1:8000/api/events
+```
+
+PowerShell:
+
+```powershell
+curl.exe -H "X-Canary-API-Key: $env:CANARY_MANAGEMENT_API_KEY" http://127.0.0.1:8000/api/events
 ```
 
 Use TLS at a trusted reverse proxy for remote deployments. Never put the key in source control, a decoy, or a URL.
 
 ## Email alerts
 
-The default alert mode is `console`. To use SMTP, configure environment variables based on `.env.example`:
+The default alert mode is `console`. To use SMTP, set the process environment variables listed in `.env.example` before starting the API. The application reads the process environment; creating a `.env` file alone does not load these values:
 
 ```text
 CANARY_ALERT_MODE=email
@@ -145,19 +154,6 @@ Each callback produces a structured event:
 ```
 
 A small scanner heuristic reduces obvious automated requests to `medium` severity. Correlate these events with endpoint, identity, and audit telemetry during investigation.
-
-An investigation can follow this sequence:
-
-```text
-Canary fires
-   -> identify token/decoy
-   -> determine source context
-   -> correlate user + endpoint
-   -> inspect file-access/DLP events
-   -> scope related activity
-   -> decide benign scanner vs suspicious access
-   -> contain/escalate if supported by evidence
-```
 
 ## API
 

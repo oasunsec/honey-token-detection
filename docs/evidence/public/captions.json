@@ -4,10 +4,10 @@
     "title": "Purpose and architecture",
     "source": "ARCHITECTURE.md",
     "kind": "Design summary",
-    "content": "Synthetic decoy DOCX\n  -> unique external callback\n  -> receiver records event\n  -> scanner-aware triage\n  -> console / SMTP decision\n  -> persisted evidence\n  -> optional DCR / Log Analytics\n  -> scheduled Sentinel rule\n  -> incident",
+    "content": "Local document test\n  Generated DOCX -> Word -> loopback receiver\n  -> SQLite event -> classification -> console alert\n\nSeparate cloud test\n  Controlled HTTPS request -> Azure receiver\n  -> Table Storage event -> notification outcome\n  -> DCR -> CanaryHit_CL -> scheduled rule -> Sentinel incident",
     "meaning": "Extended the local document-token receiver with Azure Table Storage and Sentinel ingestion. Word and cloud callbacks were exercised separately.",
     "image": "01-evidence.jpg",
-    "sha256": "7532ecd9da9d7aeb778a48e388a17d1b8a0b7023772dbad78aef899698a31075"
+    "sha256": "4f82bd6136285ef3ce09d0cba9037176d8b3fe8d5c3f6d7e08b2b676ce1c9725"
   },
   {
     "number": "02",
@@ -35,9 +35,9 @@
     "source": "infra/main.bicep",
     "kind": "Source configuration evidence",
     "content": "adminUserEnabled: false\nallowSharedKeyAccess: false\nsupportsHttpsTrafficOnly: true\ntype: 'UserAssigned'\nallowInsecure: false\n{ name: 'CANARY_RECEIVER_ONLY', value: 'true' }\n\nScoped roles: AcrPull; Storage Table Data Contributor; Monitoring Metrics Publisher.\nManagement routes return 404 in receiver-only mode.",
-    "meaning": "Disabled registry admin access, storage shared keys, HTTP ingress, and public management routes in the deployment configuration.",
+    "meaning": "Disabled registry admin access and storage shared keys, required HTTPS, and disabled public management routes in the deployment configuration.",
     "image": "04-evidence.jpg",
-    "sha256": "e3342f1c5d2b2e726c2c31de12c358a3fe15ed9c2f08ce49a9cc8379b71347b6"
+    "sha256": "cec6b639fe57b7c69203499f243e89386941859c0e9c34b957a3b100c89c4749"
   },
   {
     "number": "05",
@@ -94,9 +94,9 @@
     "source": "sentinel-rule.json",
     "kind": "Archived rule configuration",
     "content": "{\n  \"displayName\": \"Canary document access detected\",\n  \"enabled\": true,\n  \"severity\": \"High\",\n  \"queryFrequency\": \"PT5M\",\n  \"queryPeriod\": \"PT10M\",\n  \"triggerOperator\": \"GreaterThan\",\n  \"triggerThreshold\": 0,\n  \"query\": \"CanaryHit_CL | where TimeGenerated > ago(10m) | where EventType == \\\"canary_trigger\\\"\",\n  \"incidentConfiguration\": {\n    \"createIncident\": true,\n    \"groupingConfiguration\": {\n      \"enabled\": false,\n      \"groupByAlertDetails\": null,\n      \"groupByCustomDetails\": null,\n      \"groupByEntities\": null,\n      \"lookbackDuration\": \"PT5M\",\n      \"matchingMethod\": \"AllEntities\",\n      \"reopenClosedIncident\": false\n    }\n  }\n}",
-    "meaning": "Deployed the scheduled Sentinel rule with a five-minute frequency, ten-minute lookback, and incident creation enabled.",
+    "meaning": "Deployed a five-minute Sentinel rule with a ten-minute lookback and incident creation enabled. The query selected all callback rows; scanner and repeat rows were included.",
     "image": "10-evidence.jpg",
-    "sha256": "c8a460ef6f67c34589c2b998cf3e1b8f4e14dffe1579e5f82ab4044d6f7dff74"
+    "sha256": "e5dae74d1ab3fba40b1384d19f5b0a0f6afea6af5bf53675513b41723bfbaade"
   },
   {
     "number": "11",
@@ -112,7 +112,7 @@
     "number": "12",
     "title": "GitHub main CI status",
     "image": "12-github-ci-status.jpg",
-    "kind": "capture of completed GitHub run",
+    "kind": "GitHub UI capture",
     "source": "Actions run 34152044446, commit 2858824",
     "meaning": "Captured the completed main-branch CI run after the application fixes.",
     "sha256": "7f1dee8b4658c579619cc6296bd78215b57327421bf75690a26bddd5fa18bdef"
@@ -139,11 +139,11 @@
     "number": "15",
     "title": "Local regression and SMTP delivery",
     "source": "portfolio/pytest.txt + tests/test_smtp_delivery.py",
-    "kind": "verification output",
+    "kind": "Recorded test output",
     "content": "................                                                         [100%]\n============================== warnings summary ===============================\n.venv\\Lib\\site-packages\\fastapi\\testclient.py:1\n  [LOCAL USER REDACTED]\\Downloads\\canary-honeytoken-work-20260907\\canary-honeytoken-mvp\\.venv\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\n.venv\\Lib\\site-packages\\starlette\\testclient.py:53\n  [LOCAL USER REDACTED]\\Downloads\\canary-honeytoken-work-20260907\\canary-honeytoken-mvp\\.venv\\Lib\\site-packages\\starlette\\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n16 passed, 2 warnings in 6.50s\n",
     "meaning": "Ran the suite, including delivery to a local SMTP sink and the SMTP-failure regression. Sixteen tests passed.",
     "image": "15-evidence.jpg",
-    "sha256": "e4d8f79c850b4ca7e7828f0d3241c3e53b0f56e3c1fbafdd6251672e61f289e1"
+    "sha256": "565d3ddf54448b4a2b3f8cd36998db967cac9b574d57cbde7ba391c7ba21f42a"
   },
   {
     "number": "16",
@@ -158,11 +158,11 @@
   {
     "number": "17",
     "title": "Limitations and teardown status",
-    "source": "CASE_STUDY.md + COST_AND_TEARDOWN.md",
+    "source": "LIMITATIONS.md + COST_AND_TEARDOWN.md",
     "kind": "Operational notes",
-    "content": "Deployment considerations:\n- callback may be blocked or offline\n- scanner requests can cause false positives\n- source IP is not identity\n- no automatic delivery retry worker\n- rate limits, retention and integrity need deployment controls\n\nTeardown was not performed.",
-    "meaning": "Added the scoped teardown script but did not run it. Delivery retries, rate limiting, and integrity controls remained unfinished.",
+    "content": "Resource lifecycle\n  Dedicated project resource group deployed\n  Scoped teardown script added with explicit confirmation\n  Teardown not performed in the recorded run\n  Cost measurement not captured\n\nOperational scope documented in LIMITATIONS.md",
+    "meaning": "Recorded the resource state at the end of the run. The cleanup command and operational constraints are documented separately.",
     "image": "17-evidence.jpg",
-    "sha256": "abe0c768cd3d043ac3ebec531638ed312f10912d990a5d35b0837099b9f90459"
+    "sha256": "f66527c07d3e3c288cea7694dc542dcb3c12d748500b7561bcf8dc6d77d08893"
   }
 ]

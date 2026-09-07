@@ -22,9 +22,7 @@ Word 16.0.20326.20132 retrieved the local document's callback. The receiver stor
 
 The [case study](CASE_STUDY.md) follows the implementation and the failures fixed along the way. The [screenshot walkthrough](docs/evidence/public/README.md) contains the application captures and sanitized records from the work.
 
-## Scope left open
-
-Word-to-Azure retrieval, Protected View, mobile viewers, and cloud SMTP were not tested. Automatic delivery retries, atomic suppression across instances, rate limiting, and tamper-evident retention were not implemented. Callback telemetry did not establish user identity or data exfiltration.
+The project focused on document callbacks and event handling. [Operational limits](LIMITATIONS.md) and [viewer coverage](COMPATIBILITY.md) describe the boundaries of the work.
 
 ## Repository guide
 
@@ -34,11 +32,12 @@ Word-to-Azure retrieval, Protected View, mobile viewers, and cloud SMTP were not
 | [Architecture](ARCHITECTURE.md) | Local and cloud paths used in the work |
 | [Azure deployment](AZURE_DEPLOYMENT.md) | Resources and permissions deployed |
 | [Sentinel](SENTINEL.md) | Ingestion failure, rule configuration, and incident |
-| [Tests](TESTING.md) | Scenarios exercised and remaining coverage |
+| [Tests](TESTING.md) | Scenarios exercised and recorded results |
 | [Setup](docs/SETUP.md) | Commands, API examples, and SMTP configuration |
 | [Security](SECURITY.md) | Controls implemented and deployment constraints |
 | [Compatibility](COMPATIBILITY.md) | Document viewer results |
 | [Cost and teardown](COST_AND_TEARDOWN.md) | Resource lifecycle and cleanup command |
+| [Cloud components](docs/CLOUD_COMPONENTS.md) | Implementation inventory |
 
 The lab used synthetic documents. Deployment is limited to systems the operator owns or is authorized to monitor.
 

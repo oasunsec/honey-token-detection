@@ -6,6 +6,8 @@ The first ingestion attempt failed against an unresolved regional hostname. The 
 
 Bicep deployed **Canary document access detected** with a five-minute frequency, ten-minute lookback, threshold greater than zero, and incident creation enabled. `SourceIp` was mapped as an IP entity. The resulting incident was recorded with severity `High` and status `New`.
 
-The repeat event reached Log Analytics with `FirstHit=false`, `RepeatCount=1`, and a suppressed notification status. The scanner event retained its medium-severity classification.
+The repeat event reached Log Analytics with `FirstHit=false`, `RepeatCount=1`, and a suppressed notification status. The scanner row retained `Possible automated scanner interaction` in `Classification`. The medium severity was stored in the receiver event; the ingestion schema did not include a severity field.
+
+The rule selected all `canary_trigger` rows and used its configured high severity, including for scanner and repeat rows. Receiver email/console suppression did not filter the Sentinel query.
 
 The queries used for inspection are in [docs/kql](docs/kql): `canary-hits.kql`, `canary-first-hits.kql`, and `canary-repeat-hits.kql`. Saved query and incident records appear in [screenshots 09–11](docs/evidence/public/README.md#09-log-analytics-ingestion).

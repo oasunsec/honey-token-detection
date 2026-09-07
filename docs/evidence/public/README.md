@@ -34,7 +34,7 @@ Deployed the Bicep resources successfully. Resource identifiers and endpoint val
 
 **Source configuration evidence** — Source: `infra/main.bicep`.
 
-Disabled registry admin access, storage shared keys, HTTP ingress, and public management routes in the deployment configuration.
+Disabled registry admin access and storage shared keys, required HTTPS, and disabled public management routes in the deployment configuration.
 
 ![Receiver security configuration](04-evidence.jpg)
 
@@ -82,7 +82,7 @@ Queried four ingested records, including a scanner classification and a suppress
 
 **Archived rule configuration** — Source: `sentinel-rule.json`.
 
-Deployed the scheduled Sentinel rule with a five-minute frequency, ten-minute lookback, and incident creation enabled.
+Deployed a five-minute Sentinel rule with a ten-minute lookback and incident creation enabled. The query selected all callback rows; scanner and repeat rows were included.
 
 ![Sentinel analytic rule](10-evidence.jpg)
 
@@ -96,7 +96,7 @@ Recorded the resulting high-severity Sentinel incident. Account and resource ide
 
 ## 12. GitHub main CI status
 
-**capture of completed GitHub run** — Source: `Actions run 34152044446, commit 2858824`.
+**GitHub UI capture** — Source: `Actions run 34152044446, commit 2858824`.
 
 Captured the completed main-branch CI run after the application fixes.
 
@@ -120,7 +120,7 @@ Captured the pytest output from the completed GitHub test job.
 
 ## 15. Local regression and SMTP delivery
 
-**verification output** — Source: `portfolio/pytest.txt + tests/test_smtp_delivery.py`.
+**Recorded test output** — Source: `portfolio/pytest.txt + tests/test_smtp_delivery.py`.
 
 Ran the suite, including delivery to a local SMTP sink and the SMTP-failure regression. Sixteen tests passed.
 
@@ -136,8 +136,8 @@ Scanned the tracked history with Gitleaks; the recorded scan found no secrets.
 
 ## 17. Limitations and teardown status
 
-**Operational notes** — Source: `CASE_STUDY.md + COST_AND_TEARDOWN.md`.
+**Operational notes** — Source: `LIMITATIONS.md + COST_AND_TEARDOWN.md`.
 
-Added the scoped teardown script but did not run it. Delivery retries, rate limiting, and integrity controls remained unfinished.
+Recorded the resource state at the end of the run. The cleanup command and operational constraints are documented separately.
 
 ![Limitations and teardown status](17-evidence.jpg)
