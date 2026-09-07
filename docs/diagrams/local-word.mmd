@@ -1,0 +1,7 @@
+flowchart LR
+  D["Decoy DOCX"] --> W["Microsoft Word"]
+  W --> R("Local receiver<br/>FastAPI")
+  R --> E[("SQLite event<br/>and triage")]
+  E --> A["Console alert"]
+  classDef step fill:#eef8f5,stroke:#277b68,color:#163e34,stroke-width:1.5px
+  class D,W,R,E,A step

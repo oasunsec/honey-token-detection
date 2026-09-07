@@ -4,32 +4,7 @@ Extended a local Python document-honeytoken service into an Azure receiver conne
 
 The work also covered the document side: a generated DOCX opened in Word and requested its local callback. That test ran separately from the Azure callback test.
 
-```mermaid
-flowchart TB
-  subgraph LOCAL["Local Word test"]
-    direction LR
-    DOC["Decoy DOCX"] --> WORD["Microsoft Word"]
-    WORD --> LOCAL_API["Local receiver"]
-    LOCAL_API --> SQLITE["Stored event + triage"]
-    SQLITE --> CONSOLE["Console alert"]
-  end
-
-  subgraph CLOUD["Azure-to-Sentinel test"]
-    direction LR
-    REQUEST["Controlled HTTPS request"] --> AZURE_API["Azure receiver"]
-    AZURE_API --> TABLE["Table event + triage"]
-    TABLE --> DCR["DCR ingestion"]
-    DCR --> LOGS["Log Analytics"]
-    LOGS --> INCIDENT["Sentinel incident"]
-  end
-
-  classDef local fill:#e8f4f2,stroke:#18786b,color:#123c36
-  classDef cloud fill:#eaf1fb,stroke:#356caa,color:#173d69
-  class DOC,WORD,LOCAL_API,SQLITE,CONSOLE local
-  class REQUEST,AZURE_API,TABLE,DCR,LOGS,INCIDENT cloud
-```
-
-*Honey Token: tested event paths. The two tests ran separately.*
+[![Honey Token: separate local Word and Azure-to-Sentinel event paths](docs/diagrams/tested-event-paths.svg)](docs/diagrams/tested-event-paths.svg)
 
 **Stack:** Python, FastAPI, SQLite, Azure Table Storage, Container Apps, Bicep, Log Analytics, KQL, Microsoft Sentinel, Docker, GitHub Actions.
 
