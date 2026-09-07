@@ -6,12 +6,12 @@ import secrets
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .alerts import send_alert
 from .config import Settings
 from .db import Database
-from .decoys import TRANSPARENT_GIF_B64, callback_url, create_docx_decoy, create_html_decoy
+from .decoys import TRANSPARENT_GIF_B64, callback_url, create_docx_decoy, create_html_decoy, validate_filename
 from .triage import classify
 
 
@@ -20,6 +20,11 @@ class TokenCreate(BaseModel):
     filename: str = Field(min_length=2, max_length=180)
     severity: str = Field(default="high", pattern="^(low|medium|high|critical)$")
     notes: str = Field(default="", max_length=500)
+
+    @field_validator("filename")
+    @classmethod
+    def filename_must_be_safe(cls, value: str) -> str:
+        return validate_filename(value)
 
 
 class DecoyCreate(BaseModel):

@@ -8,11 +8,25 @@ import zipfile
 TRANSPARENT_GIF_B64 = "R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
 
 
+def validate_filename(filename: str) -> str:
+    """Require a plain file name so decoy generation cannot escape its output directory."""
+    if (
+        not filename
+        or "\x00" in filename
+        or "/" in filename
+        or "\\" in filename
+        or Path(filename).name != filename
+    ):
+        raise ValueError("filename must be a plain file name without path components")
+    return filename
+
+
 def callback_url(base_url: str, token_id: str) -> str:
     return f"{base_url.rstrip('/')}/t/{token_id}/pixel.gif"
 
 
 def create_html_decoy(output: Path, filename: str, url: str) -> Path:
+    validate_filename(filename)
     output.mkdir(parents=True, exist_ok=True)
     path = output / filename
     html = f"""<!doctype html>
@@ -36,6 +50,7 @@ def create_docx_decoy(output: Path, filename: str, url: str) -> Path:
     deliberate limitation of callback-based document canaries and should be
     validated in the target lab before relying on it.
     """
+    validate_filename(filename)
     output.mkdir(parents=True, exist_ok=True)
     path = output / filename
 

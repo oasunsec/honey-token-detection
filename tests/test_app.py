@@ -1,4 +1,7 @@
+import contextlib
+import io
 from pathlib import Path
+import zipfile
 
 from fastapi.testclient import TestClient
 
@@ -6,11 +9,11 @@ from app.config import Settings
 from app.main import create_app
 
 
-def make_client(tmp_path: Path) -> TestClient:
+def make_client(tmp_path: Path, alert_mode: str = "none") -> TestClient:
     settings = Settings(
         db_path=str(tmp_path / "test.db"),
         base_url="http://testserver",
-        alert_mode="none",
+        alert_mode=alert_mode,
         dedupe_seconds=300,
     )
     return TestClient(create_app(settings))
@@ -56,6 +59,50 @@ def test_disabled_token_returns_404(tmp_path: Path):
     ).json()
     assert client.post(f"/api/tokens/{token['id']}/disable").status_code == 200
     assert client.get(f"/t/{token['id']}/pixel.gif").status_code == 404
+
+
+def test_console_alert_uses_triage_result(tmp_path: Path):
+    client = make_client(tmp_path, alert_mode="console")
+    token = client.post(
+        "/api/tokens",
+        json={"name": "Console test", "filename": "Console_Test.docx", "severity": "high"},
+    ).json()
+
+    output = io.StringIO()
+    with contextlib.redirect_stdout(output):
+        response = client.get(
+            f"/t/{token['id']}/pixel.gif", headers={"user-agent": "LabBrowser/1.0"}
+        )
+
+    event = client.get("/api/events").json()[0]
+    assert response.status_code == 200
+    assert event["triage_label"] == "Honeytoken trigger - potential unauthorized access"
+    assert event["severity"] == "high"
+    assert "Triage: Honeytoken trigger - potential unauthorized access" in output.getvalue()
+    assert "Severity: high" in output.getvalue()
+
+
+def test_docx_relationship_and_filename_validation(tmp_path: Path):
+    client = make_client(tmp_path)
+    token = client.post(
+        "/api/tokens",
+        json={"name": "DOCX test", "filename": "DOCX_Test.docx", "severity": "high"},
+    ).json()
+    decoy = client.post(
+        "/api/decoys",
+        json={"token_id": token["id"], "format": "docx", "output_dir": str(tmp_path / "decoys")},
+    )
+    assert decoy.status_code == 200
+    with zipfile.ZipFile(decoy.json()["path"]) as package:
+        relationships = package.read("word/_rels/document.xml.rels").decode("utf-8")
+    assert token["callback_url"] in relationships
+    assert 'TargetMode="External"' in relationships
+
+    invalid = client.post(
+        "/api/tokens",
+        json={"name": "Unsafe", "filename": "../outside.docx", "severity": "high"},
+    )
+    assert invalid.status_code == 422
 
 
 def test_email_alert_content(tmp_path: Path):

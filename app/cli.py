@@ -7,7 +7,7 @@ import secrets
 
 from .config import Settings
 from .db import Database
-from .decoys import callback_url, create_docx_decoy, create_html_decoy
+from .decoys import callback_url, create_docx_decoy, create_html_decoy, validate_filename
 
 
 def main() -> None:
@@ -27,6 +27,7 @@ def main() -> None:
     db = Database(settings.db_path)
 
     if args.command == "create":
+        validate_filename(args.filename)
         token_id = secrets.token_urlsafe(18)
         db.create_token(token_id, args.name, args.filename, args.severity, args.notes)
         url = callback_url(settings.base_url, token_id)
