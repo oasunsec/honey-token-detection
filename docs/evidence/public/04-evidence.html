@@ -1,0 +1,9 @@
+<!doctype html><html><meta charset="utf-8"><title>Receiver security configuration</title><style>body{margin:0;background:#edf1f5;color:#14233b;font:17px/1.55 Segoe UI,Arial}main{max-width:1240px;margin:35px auto;padding:30px;background:white;border-top:7px solid #126675}h1{font-size:30px;margin:10px 0}h2{font-size:20px} .kicker{color:#126675;letter-spacing:2px;font-weight:700}.meta{padding:12px 18px;background:#e9f2f4;font-size:14px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:15px/1.55 Consolas,monospace;background:#101e32;color:#ebf3fa;padding:24px}footer{font-size:13px;color:#53677c;border-top:1px solid #d4dee6;padding-top:14px}a{color:#126675}img{max-width:100%;border:1px solid #d4dee6}</style><main><div class="kicker">CANARY LAB / CYBERSECURITY PORTFOLIO / 04</div><h1>Receiver security configuration</h1><div class="meta">Source configuration evidence<br>Source: infra/main.bicep</div><pre>adminUserEnabled: false
+allowSharedKeyAccess: false
+supportsHttpsTrafficOnly: true
+type: &#x27;UserAssigned&#x27;
+allowInsecure: false
+{ name: &#x27;CANARY_RECEIVER_ONLY&#x27;, value: &#x27;true&#x27; }
+
+Scoped roles: AcrPull; Storage Table Data Contributor; Monitoring Metrics Publisher.
+Management routes return 404 in receiver-only mode.</pre><p>Shows checked-in controls. Role configuration alone does not prove a fresh live access review.</p><footer>Follow-up evidence view created 2026-09-07. Sensitive fields omitted or labelled REDACTED. This page is an evidence viewer, not an Azure portal recreation.</footer></main></html>

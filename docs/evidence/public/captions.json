@@ -1,0 +1,168 @@
+[
+  {
+    "number": "01",
+    "title": "Purpose and architecture",
+    "source": "ARCHITECTURE.md + CODEX_TASK.md",
+    "kind": "Design summary",
+    "content": "Synthetic decoy DOCX\n  -> unique external callback\n  -> receiver records event\n  -> scanner-aware triage\n  -> console / SMTP decision\n  -> persisted evidence\n  -> optional DCR / Log Analytics\n  -> scheduled Sentinel rule\n  -> incident",
+    "meaning": "Detect interaction in an authorized lab. A callback is a signal, not proof of exfiltration or identity.",
+    "image": "01-evidence.jpg",
+    "sha256": "bac4446f51e9336b027da719b4609da9cf70799de87299b646810578d5db7fe7"
+  },
+  {
+    "number": "02",
+    "title": "Starting state and baseline",
+    "source": "00-azure-start-state.json + docs/BASELINE.md",
+    "kind": "Archived record, captured 2026-09-07",
+    "content": "{\n  \"azure\": {\n    \"environmentName\": \"AzureCloud\",\n    \"state\": \"Enabled\",\n    \"isDefault\": true\n  },\n  \"baseline_tests\": \"9 passed (archived baseline report)\",\n  \"baseline_storage\": \"SQLite\",\n  \"missing_at_baseline\": \"Azure Monitor / Sentinel adapter\",\n  \"subscription\": \"[REDACTED]\",\n  \"tenant_and_operator\": \"[REDACTED]\"\n}",
+    "meaning": "Shows the recorded starting point. This is a view of archived records, not an original portal screenshot.",
+    "image": "02-evidence.jpg",
+    "sha256": "95c68cdcb87c265d279da553b8fdf16ac50f2669677e0fc03b4c6c530f2350d1"
+  },
+  {
+    "number": "03",
+    "title": "Infrastructure deployment",
+    "source": "03-bicep-final-deployment.json",
+    "kind": "Archived Azure deployment response",
+    "content": "{\n  \"location\": null,\n  \"provisioningState\": \"Succeeded\",\n  \"timestamp\": \"2026-09-07T17:24:21.173201+00:00\",\n  \"duration\": \"PT1M11.2520767S\",\n  \"mode\": \"Incremental\",\n  \"resource_count\": 15,\n  \"outputs_available\": [\n    \"containerAppFqdn\",\n    \"containerAppName\",\n    \"dcrEndpoint\",\n    \"dcrImmutableId\",\n    \"dcrName\",\n    \"receiverIdentityName\",\n    \"receiverPrincipalId\",\n    \"registryLoginServer\",\n    \"registryName\",\n    \"resourceGroupName\",\n    \"storageAccountName\",\n    \"storageTableEndpoint\",\n    \"workspaceId\",\n    \"workspaceName\"\n  ],\n  \"output_values\": \"[RESOURCE ENDPOINTS AND IDENTIFIERS OMITTED]\"\n}",
+    "meaning": "Records the actual deployment result while withholding subscription, tenant, principal and endpoint values.",
+    "image": "03-evidence.jpg",
+    "sha256": "48b811364d40ccd05ca75e5455bff6369c7f0caa0aab957a023a33e012052125"
+  },
+  {
+    "number": "04",
+    "title": "Receiver security configuration",
+    "source": "infra/main.bicep",
+    "kind": "Source configuration evidence",
+    "content": "adminUserEnabled: false\nallowSharedKeyAccess: false\nsupportsHttpsTrafficOnly: true\ntype: 'UserAssigned'\nallowInsecure: false\n{ name: 'CANARY_RECEIVER_ONLY', value: 'true' }\n\nScoped roles: AcrPull; Storage Table Data Contributor; Monitoring Metrics Publisher.\nManagement routes return 404 in receiver-only mode.",
+    "meaning": "Shows checked-in controls. Role configuration alone does not prove a fresh live access review.",
+    "image": "04-evidence.jpg",
+    "sha256": "882dfb70b27b65a02bea05b05ef86e6ddf6c09aa7162a163deb2946bf90fcb74"
+  },
+  {
+    "number": "05",
+    "title": "Deployed receiver health",
+    "source": "09-container-app-health.json",
+    "kind": "Archived HTTP result",
+    "content": "{\n  \"StatusCode\": 200,\n  \"body\": {\n    \"status\": \"ok\",\n    \"receiver_only\": true,\n    \"storage_backend\": \"azure_table\"\n  }\n}",
+    "meaning": "HTTP 200 with receiver-only mode and Azure Table storage in the saved deployment validation.",
+    "image": "05-evidence.jpg",
+    "sha256": "49ba2cd248dbe5bf06588228cd24e3cb72148a2fb51e6e4beef1f05ea2c5e23f"
+  },
+  {
+    "number": "06",
+    "title": "Word renders the synthetic decoy",
+    "image": "06-word-decoy.png",
+    "kind": "Fresh Microsoft Word UI capture",
+    "source": "Word 16.0.20326.20132",
+    "meaning": "The generated DOCX renders in Word. Account controls are cropped out. Callback proof is the separately saved event in image 07; reopening for this screenshot is not claimed as a new end-to-end run.",
+    "sha256": "824ae9b1a22b9390f6801c37e8554ae60d389cd384cf1f9ab3e1c968356340bc"
+  },
+  {
+    "number": "07",
+    "title": "Word callback and triage",
+    "source": "word-viewer-result.json",
+    "kind": "Archived event from observed Word open",
+    "content": "{\n  \"occurred_at\": \"2026-09-07T18:27:35.267154+00:00\",\n  \"source_ip\": \"[IP REDACTED]\",\n  \"user_agent\": \"Mozilla/4.0 (compatible; ms-office; MSOffice 16)\",\n  \"event_type\": \"canary_trigger\",\n  \"triage_label\": \"Honeytoken trigger - potential unauthorized access\",\n  \"severity\": \"high\",\n  \"duplicate\": 0,\n  \"alert_status\": \"sent\",\n  \"filename\": \"Synthetic_Forecast.docx\"\n}",
+    "meaning": "Word 16.0.20326.20132 requested the local callback under existing settings. This does not establish Protected View or remote HTTPS behavior.",
+    "image": "07-evidence.jpg",
+    "sha256": "c4bd92f8bd40e493d2935ce62d43acb3b3d1788615cf8a83505da407fbba5c42"
+  },
+  {
+    "number": "08",
+    "title": "Durable events and duplicate suppression",
+    "source": "table-events-sanitized.json",
+    "kind": "Archived Azure Table query",
+    "content": "[\n  {\n    \"occurred_at\": \"2026-09-07T17:55:00.808253+00:00\",\n    \"event_type\": \"canary_trigger\",\n    \"severity\": \"medium\",\n    \"duplicate\": false,\n    \"alert_status\": \"sent\",\n    \"sentinel_status\": \"sent\"\n  },\n  {\n    \"occurred_at\": \"2026-09-07T17:55:00.239828+00:00\",\n    \"event_type\": \"canary_trigger\",\n    \"severity\": \"high\",\n    \"duplicate\": false,\n    \"alert_status\": \"sent\",\n    \"sentinel_status\": \"sent\"\n  },\n  {\n    \"occurred_at\": \"2026-09-07T17:44:12.899941+00:00\",\n    \"event_type\": \"canary_trigger\",\n    \"severity\": \"high\",\n    \"duplicate\": false,\n    \"alert_status\": \"sent\",\n    \"sentinel_status\": \"sent\"\n  },\n  {\n    \"occurred_at\": \"2026-09-07T17:39:46.692930+00:00\",\n    \"event_type\": \"canary_trigger\",\n    \"severity\": \"high\",\n    \"duplicate\": false,\n    \"alert_status\": \"sent\",\n    \"sentinel_status\": \"failed\"\n  }\n]",
+    "meaning": "Saved Azure Table rows retain alert and ingestion outcomes, including scanner severity. These rows are not duplicates; suppression is verified by the regression tests.",
+    "image": "08-evidence.jpg",
+    "sha256": "e84d9750237f4b2b2a799f06f379aedc8be8ffd4f54b134cfb0de2fdb31858e4"
+  },
+  {
+    "number": "09",
+    "title": "Log Analytics ingestion",
+    "source": "log-analytics-latest.json",
+    "kind": "Archived CanaryHit_CL query",
+    "content": "[\n  {\n    \"TimeGenerated\": \"2026-09-07T17:55:32.059124Z\",\n    \"EventType\": \"canary_trigger\",\n    \"Classification\": \"Honeytoken trigger - potential unauthorized access\",\n    \"FirstHit\": \"False\",\n    \"RepeatCount\": \"1\",\n    \"NotificationStatus\": \"suppressed\"\n  },\n  {\n    \"TimeGenerated\": \"2026-09-07T17:55:00.808253Z\",\n    \"EventType\": \"canary_trigger\",\n    \"Classification\": \"Possible automated scanner interaction\",\n    \"FirstHit\": \"True\",\n    \"RepeatCount\": \"0\",\n    \"NotificationStatus\": \"sent\"\n  },\n  {\n    \"TimeGenerated\": \"2026-09-07T17:55:00.239828Z\",\n    \"EventType\": \"canary_trigger\",\n    \"Classification\": \"Honeytoken trigger - potential unauthorized access\",\n    \"FirstHit\": \"True\",\n    \"RepeatCount\": \"0\",\n    \"NotificationStatus\": \"sent\"\n  },\n  {\n    \"TimeGenerated\": \"2026-09-07T17:44:12.899941Z\",\n    \"EventType\": \"canary_trigger\",\n    \"Classification\": \"Honeytoken trigger - potential unauthorized access\",\n    \"FirstHit\": \"True\",\n    \"RepeatCount\": \"0\",\n    \"NotificationStatus\": \"sent\"\n  }\n]",
+    "meaning": "Saved query rows connect receiver events to the SIEM ingestion path. Raw callback tokens and source IPs are excluded.",
+    "image": "09-evidence.jpg",
+    "sha256": "de301dffca7a5d19d63d75b617e3d910691ff93d551b6020a0314840b00e9b75"
+  },
+  {
+    "number": "10",
+    "title": "Sentinel analytic rule",
+    "source": "sentinel-rule.json",
+    "kind": "Archived rule configuration",
+    "content": "{\n  \"displayName\": \"Canary document access detected\",\n  \"enabled\": true,\n  \"severity\": \"High\",\n  \"queryFrequency\": \"PT5M\",\n  \"queryPeriod\": \"PT10M\",\n  \"triggerOperator\": \"GreaterThan\",\n  \"triggerThreshold\": 0,\n  \"query\": \"CanaryHit_CL | where TimeGenerated > ago(10m) | where EventType == \\\"canary_trigger\\\"\",\n  \"incidentConfiguration\": {\n    \"createIncident\": true,\n    \"groupingConfiguration\": {\n      \"enabled\": false,\n      \"groupByAlertDetails\": null,\n      \"groupByCustomDetails\": null,\n      \"groupByEntities\": null,\n      \"lookbackDuration\": \"PT5M\",\n      \"matchingMethod\": \"AllEntities\",\n      \"reopenClosedIncident\": false\n    }\n  }\n}",
+    "meaning": "Shows scheduled detection logic and incident creation configuration. The evaluation schedule introduces delay.",
+    "image": "10-evidence.jpg",
+    "sha256": "fcb4862a523b540ac7cd12649395cd1c4a61e0a75c3e4bbe7ef8bd2d3e1d6e39"
+  },
+  {
+    "number": "11",
+    "title": "Sentinel incident",
+    "source": "sentinel-incidents.json",
+    "kind": "Archived Sentinel incident response",
+    "content": "{\n  \"title\": \"Canary document access detected\",\n  \"severity\": \"High\",\n  \"status\": \"New\",\n  \"createdTimeUtc\": \"2026-09-07T17:53:45.1566667Z\",\n  \"firstActivityTimeUtc\": \"2026-09-07T17:44:12Z\",\n  \"lastActivityTimeUtc\": \"2026-09-07T17:44:12Z\",\n  \"description\": \"Creates a Sentinel incident when the canary receiver records a document access event.\",\n  \"providerName\": \"Microsoft XDR\"\n}",
+    "meaning": "Actual saved incident response; owner, incident URL, related resource IDs and tenant identifiers are omitted.",
+    "image": "11-evidence.jpg",
+    "sha256": "21f9e51e050158707385788a177170a14f320748f5550ba64c59a16b06463af8"
+  },
+  {
+    "number": "12",
+    "title": "GitHub main CI status",
+    "image": "12-github-ci-status.jpg",
+    "kind": "Fresh capture of completed GitHub run",
+    "source": "Actions run 34152044446, commit 2858824",
+    "meaning": "The completed main-branch run reports Success. Account details and navigation are excluded from the crop.",
+    "sha256": "7f1dee8b4658c579619cc6296bd78215b57327421bf75690a26bddd5fa18bdef"
+  },
+  {
+    "number": "13",
+    "title": "GitHub test job",
+    "image": "13-github-test-job.jpg",
+    "kind": "Fresh GitHub UI capture",
+    "source": "Actions run 34152044446",
+    "meaning": "The workflow graph shows a successful test job. This is a cropped view of the actual GitHub page.",
+    "sha256": "136c53ad65eaea796d107c12430e95ce24f4b0d344f0ce2a17b4c702f6d764bf"
+  },
+  {
+    "number": "14",
+    "title": "GitHub pytest log",
+    "image": "14-github-pytest-output.jpg",
+    "kind": "Fresh GitHub UI capture",
+    "source": "Job 101836165394 in Actions run 34152044446",
+    "meaning": "The actual pytest log shows completed assertions and dependency warnings. The full local summary is also visible in image 15.",
+    "sha256": "b41274e5370bfa5b1a8a6f811f47fb4be1cd1d7948406232b9dea3773033b7ef"
+  },
+  {
+    "number": "15",
+    "title": "Local regression and SMTP delivery",
+    "source": "portfolio/pytest.txt + tests/test_smtp_delivery.py",
+    "kind": "Fresh verification output",
+    "content": "................                                                         [100%]\n============================== warnings summary ===============================\n.venv\\Lib\\site-packages\\fastapi\\testclient.py:1\n  [LOCAL USER REDACTED]\\Downloads\\canary-honeytoken-work-20260907\\canary-honeytoken-mvp\\.venv\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\n.venv\\Lib\\site-packages\\starlette\\testclient.py:53\n  [LOCAL USER REDACTED]\\Downloads\\canary-honeytoken-work-20260907\\canary-honeytoken-mvp\\.venv\\Lib\\site-packages\\starlette\\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n16 passed, 2 warnings in 6.50s\n",
+    "meaning": "The suite includes a real ephemeral loopback SMTP sink, triage-field verification, duplicate suppression, and notification-failure isolation. No external mailbox credentials are used.",
+    "image": "15-evidence.jpg",
+    "sha256": "89a1ab1e65e377f3913f5394c4129374a3c24fc48ddfd2eba0147acc61421c3c"
+  },
+  {
+    "number": "16",
+    "title": "Secret-history verification",
+    "source": "portfolio/gitleaks.txt",
+    "kind": "Fresh Gitleaks output",
+    "content": "1:52PM INF 19 commits scanned.\n1:52PM INF scanned ~142484 bytes (142.48 KB) in 1.68s\n1:52PM INF no leaks found\n",
+    "meaning": "The tracked Git history scan passed. Live canary evidence remains private and ignored; a clean history does not imply the whole local disk has no secrets.",
+    "image": "16-evidence.jpg",
+    "sha256": "75eba357ba5d569dc4543d8e504324a5066263b745a3b8a560b8c4fbdcba5a80"
+  },
+  {
+    "number": "17",
+    "title": "Release boundary and teardown",
+    "source": "VALIDATION_REPORT.md + COST_AND_TEARDOWN.md",
+    "kind": "Documented final state",
+    "content": "READY_FOR_PUBLIC_REVIEW as an experimental lab MVP\n\nProduction limits:\n- callback may be blocked or offline\n- scanner requests can cause false positives\n- source IP is not identity\n- no automatic delivery retry worker\n- rate limits, retention and integrity need deployment controls\n\nTeardown was not performed.\nNo screenshot of deleted resources is claimed.",
+    "meaning": "The repository remains private. Publishing source and operating a production service are separate decisions.",
+    "image": "17-evidence.jpg",
+    "sha256": "9a45fa5f40e6965733f9ea4d2491e467a41267886b9fb9b6807ca4a08cca701c"
+  }
+]

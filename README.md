@@ -328,3 +328,7 @@ Deploy decoys only in systems and networks you own or are authorized to monitor.
 ## License
 
 MIT
+
+## Portfolio evidence
+
+The [numbered screenshot walkthrough](docs/evidence/public/README.md) covers the baseline, deployment, decoy, triage, SIEM, tests, and release boundary. Every image identifies whether it is a fresh application capture or a view of archived evidence. Sensitive identifiers are excluded. The [offline gallery](docs/evidence/public/index.html) opens locally with the image files alongside it.
