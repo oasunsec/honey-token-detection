@@ -138,12 +138,12 @@
   {
     "number": "15",
     "title": "Local regression and SMTP delivery",
-    "source": "portfolio/pytest.txt + tests/test_smtp_delivery.py",
+    "source": "tests/test_smtp_delivery.py + portfolio/pytest.txt",
     "kind": "Recorded test output",
-    "content": "................                                                         [100%]\n============================== warnings summary ===============================\n.venv\\Lib\\site-packages\\fastapi\\testclient.py:1\n  [LOCAL USER REDACTED]\\Downloads\\canary-honeytoken-work-20260907\\canary-honeytoken-mvp\\.venv\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\n.venv\\Lib\\site-packages\\starlette\\testclient.py:53\n  [LOCAL USER REDACTED]\\Downloads\\canary-honeytoken-work-20260907\\canary-honeytoken-mvp\\.venv\\Lib\\site-packages\\starlette\\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n16 passed, 2 warnings in 6.50s\n",
-    "meaning": "Ran the suite, including delivery to a local SMTP sink and the SMTP-failure regression. Sixteen tests passed.",
+    "content": "SMTP sink transcript (redacted)\nTransport: loopback TCP SMTP sink on an ephemeral local port\nS: 220 loopback SMTP sink ready\nC: EHLO [LOCAL CLIENT]\nS: 250 OK\nC: MAIL [REDACTED]\nS: 250 OK\nC: RCPT [REDACTED]\nS: 250 OK\nC: DATA\nS: 354 End with dot\nS: 250 Accepted\nC: QUIT\nS: 221 Bye\nResult: callbacks=2 | persisted_events=2 | accepted_messages=1 | alert_statuses=suppressed,sent | raw_token_in_message=absent\n\nFull suite: 16 passed, 2 dependency warnings.",
+    "meaning": "The integration test opened a real loopback SMTP connection, sent one DATA message after two callbacks, and confirmed two persisted events with sent/suppressed alert states. SMTP identities and callback tokens are redacted from the public record.",
     "image": "15-evidence.jpg",
-    "sha256": "565d3ddf54448b4a2b3f8cd36998db967cac9b574d57cbde7ba391c7ba21f42a"
+    "sha256": "28d4124a1b67417c91d994677e09a8a57edb9964731b325c4a651a8200d5aea9"
   },
   {
     "number": "16",

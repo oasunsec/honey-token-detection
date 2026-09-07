@@ -1,13 +1,17 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><title>Local regression and SMTP delivery</title><style>body{margin:0;background:#edf1f5;color:#14233b;font:17px/1.55 Segoe UI,Arial}main{max-width:1240px;margin:35px auto;padding:30px;background:white;border-top:7px solid #126675}h1{font-size:30px;margin:10px 0}.meta{padding:12px 18px;background:#e9f2f4;font-size:14px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:15px/1.55 Consolas,monospace;background:#101e32;color:#ebf3fa;padding:24px}footer{font-size:13px;color:#53677c;border-top:1px solid #d4dee6;padding-top:14px}a{color:#126675}img{max-width:100%;height:auto}article{margin:36px 0;padding-top:20px;border-top:1px solid #ccd5dc}</style><main><h1>Local regression and SMTP delivery</h1><div class="meta">Recorded test output | Source: portfolio/pytest.txt + tests/test_smtp_delivery.py</div><pre>................                                                         [100%]
-============================== warnings summary ===============================
-.venv\Lib\site-packages\fastapi\testclient.py:1
-  [LOCAL USER REDACTED]\Downloads\canary-honeytoken-work-20260907\canary-honeytoken-mvp\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
-    from starlette.testclient import TestClient as TestClient  # noqa
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Local regression and SMTP delivery</title><style>body{margin:0;background:#edf1f5;color:#14233b;font:17px/1.55 Segoe UI,Arial}main{max-width:1240px;margin:35px auto;padding:30px;background:white;border-top:7px solid #126675}h1{font-size:30px;margin:10px 0}.meta{padding:12px 18px;background:#e9f2f4;font-size:14px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:15px/1.55 Consolas,monospace;background:#101e32;color:#ebf3fa;padding:24px}footer{font-size:13px;color:#53677c;border-top:1px solid #d4dee6;padding-top:14px}a{color:#126675}img{max-width:100%;height:auto}article{margin:36px 0;padding-top:20px;border-top:1px solid #ccd5dc}</style><main><h1>Local regression and SMTP delivery</h1><div class="meta">Recorded test output | Source: tests/test_smtp_delivery.py + portfolio/pytest.txt</div><pre>SMTP sink transcript (redacted)
+Transport: loopback TCP SMTP sink on an ephemeral local port
+S: 220 loopback SMTP sink ready
+C: EHLO [LOCAL CLIENT]
+S: 250 OK
+C: MAIL [REDACTED]
+S: 250 OK
+C: RCPT [REDACTED]
+S: 250 OK
+C: DATA
+S: 354 End with dot
+S: 250 Accepted
+C: QUIT
+S: 221 Bye
+Result: callbacks=2 | persisted_events=2 | accepted_messages=1 | alert_statuses=suppressed,sent | raw_token_in_message=absent
 
-.venv\Lib\site-packages\starlette\testclient.py:53
-  [LOCAL USER REDACTED]\Downloads\canary-honeytoken-work-20260907\canary-honeytoken-mvp\.venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
-    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
-
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-16 passed, 2 warnings in 6.50s
-</pre><p>Ran the suite, including delivery to a local SMTP sink and the SMTP-failure regression. Sixteen tests passed.</p><footer>7 September 2026 · Sanitized evidence record</footer></main></html>
+Full suite: 16 passed, 2 dependency warnings.</pre><p>The integration test opened a real loopback SMTP connection, sent one DATA message after two callbacks, and confirmed two persisted events with sent/suppressed alert states. SMTP identities and callback tokens are redacted from the public record.</p><footer>7 September 2026 · Sanitized evidence record</footer></main></html>
