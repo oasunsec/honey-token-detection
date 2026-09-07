@@ -12,8 +12,8 @@ Run these commands from the repository root. The local example uses synthetic do
 Get the source and enter the repository before continuing:
 
 ```text
-git clone https://github.com/oasunsec/canary-honeytoken-detection.git
-cd canary-honeytoken-detection
+git clone https://github.com/oasunsec/honey-token-detection.git
+cd honey-token-detection
 ```
 
 ## Quick start
