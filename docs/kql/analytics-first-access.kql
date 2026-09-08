@@ -1,0 +1,10 @@
+// Five-minute ingestion slice prevents reselecting rows across overlapping lookbacks.
+// One-hour event horizon permits up to 55 minutes of ingestion delay.
+CanaryHit_CL
+| where TimeGenerated > ago(1h)
+| where ingestion_time() > ago(5m)
+| where EventType == "canary_trigger" and ActiveCanary == true
+| where FirstHit == true and IsDuplicate == false
+| where Classification == "honeytoken_access" and IsScanner == false
+| where Severity in ("high", "critical")
+| summarize arg_max(TimeGenerated, *) by EventId

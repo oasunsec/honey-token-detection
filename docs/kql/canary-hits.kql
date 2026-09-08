@@ -1,4 +1,5 @@
 CanaryHit_CL
 | where TimeGenerated > ago(24h)
-| project TimeGenerated, EventType, CanaryId, ArtifactName, SourceIp, UserAgent, Classification, FirstHit, RepeatCount, NotificationStatus, EventId
+| where EventType == "canary_trigger"
+| project TimeGenerated, EventTime, EventId, CanaryId, ArtifactName, SourceIp, UserAgent, Classification, Severity, IsScanner, IsDuplicate, FirstHit, RepeatCount, AlertStatus, Reason, ReceiverVersion
 | order by TimeGenerated desc

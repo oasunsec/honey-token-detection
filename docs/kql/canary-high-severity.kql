@@ -1,6 +1,6 @@
 CanaryHit_CL
 | where TimeGenerated > ago(24h)
 | where EventType == "canary_trigger"
-| where FirstHit == true
+| where FirstHit == true and IsDuplicate == false and ActiveCanary == true and IsScanner == false and Classification == "honeytoken_access" and Severity in ("high", "critical")
 | project TimeGenerated, EventTime, EventId, CanaryId, ArtifactName, SourceIp, UserAgent, Classification, Severity, IsScanner, IsDuplicate, FirstHit, RepeatCount, AlertStatus, Reason, ReceiverVersion
 | order by TimeGenerated desc

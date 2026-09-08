@@ -12,6 +12,8 @@ param deployContainerApp bool = false
 param acrSku string = 'Basic'
 @description('Container App minimum replicas during validation.')
 param minReplicas int = 1
+@description('Receiver release identifier attached to every SIEM event.')
+param receiverVersion string = '0.2.2'
 
 var tags = {
   Project: 'CanaryHoneytoken'
@@ -110,6 +112,15 @@ resource customTable 'Microsoft.OperationalInsights/workspaces/tables@2022-10-01
         { name: 'SourceIp', type: 'string' }
         { name: 'UserAgent', type: 'string' }
         { name: 'Classification', type: 'string' }
+        { name: 'EventTime', type: 'datetime' }
+        { name: 'Severity', type: 'string' }
+        { name: 'IsScanner', type: 'bool' }
+        { name: 'IsDuplicate', type: 'bool' }
+        { name: 'ActiveCanary', type: 'bool' }
+        { name: 'Reason', type: 'string' }
+        { name: 'RecommendedAction', type: 'string' }
+        { name: 'AlertStatus', type: 'string' }
+        { name: 'ReceiverVersion', type: 'string' }
         { name: 'FirstHit', type: 'bool' }
         { name: 'RepeatCount', type: 'int' }
         { name: 'Receiver', type: 'string' }
@@ -153,6 +164,15 @@ resource dcr 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
           { name: 'SourceIp', type: 'string' }
           { name: 'UserAgent', type: 'string' }
           { name: 'Classification', type: 'string' }
+          { name: 'EventTime', type: 'datetime' }
+          { name: 'Severity', type: 'string' }
+          { name: 'IsScanner', type: 'boolean' }
+          { name: 'IsDuplicate', type: 'boolean' }
+          { name: 'ActiveCanary', type: 'boolean' }
+          { name: 'Reason', type: 'string' }
+          { name: 'RecommendedAction', type: 'string' }
+          { name: 'AlertStatus', type: 'string' }
+          { name: 'ReceiverVersion', type: 'string' }
           { name: 'FirstHit', type: 'boolean' }
           { name: 'RepeatCount', type: 'int' }
           { name: 'Receiver', type: 'string' }
@@ -260,10 +280,10 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = if (deployConta
             { name: 'CANARY_AZURE_DCR_IMMUTABLE_ID', value: dcr.properties.immutableId }
             { name: 'CANARY_AZURE_DCR_STREAM_NAME', value: 'Custom-CanaryHit_CL' }
             { name: 'CANARY_RECEIVER_ONLY', value: 'true' }
-            { name: 'CANARY_RECEIVER_VERSION', value: uniqueString(deployment().name) }
+            { name: 'CANARY_RECEIVER_VERSION', value: receiverVersion }
             { name: 'AZURE_CLIENT_ID', value: identity.properties.clientId }
             { name: 'CANARY_ALERT_MODE', value: 'console' }
-            { name: 'CANARY_TRUST_PROXY_HEADERS', value: 'true' }
+            { name: 'CANARY_TRUST_PROXY_HEADERS', value: 'false' }
           ]
           probes: [
             {
@@ -297,26 +317,28 @@ resource analyticRule 'Microsoft.SecurityInsights/alertRules@2023-02-01' = {
   dependsOn: [ sentinelOnboarding, customTable ]
   kind: 'Scheduled'
   properties: {
-    displayName: 'Canary document access detected'
-    description: 'Creates a Sentinel incident when the canary receiver records a document access event.'
+    displayName: 'Honeytoken first-hit suspicious access'
+    description: 'Active non-scanner first hits at receiver high or critical severity. Correlate with endpoint and identity telemetry before attribution.'
     enabled: true
     severity: 'High'
-    query: 'CanaryHit_CL | where TimeGenerated > ago(10m) | where EventType == "canary_trigger"'
+    query: loadTextContent('../docs/kql/analytics-first-access.kql')
     queryFrequency: 'PT5M'
-    queryPeriod: 'PT10M'
+    queryPeriod: 'PT1H'
     triggerOperator: 'GreaterThan'
     triggerThreshold: 0
     suppressionEnabled: false
     suppressionDuration: 'PT5M'
     tactics: [ 'Collection' ]
     techniques: []
+    eventGroupingSettings: { aggregationKind: 'AlertPerResult' }
     incidentConfiguration: {
       createIncident: true
       groupingConfiguration: {
-        enabled: false
-        matchingMethod: 'AllEntities'
+        enabled: true
+        matchingMethod: 'Selected'
+        groupByCustomDetails: [ 'CanaryId' ]
         reopenClosedIncident: false
-        lookbackDuration: 'PT5M'
+        lookbackDuration: 'PT1H'
       }
     }
     entityMappings: [
@@ -335,6 +357,65 @@ resource analyticRule 'Microsoft.SecurityInsights/alertRules@2023-02-01' = {
       RepeatCount: 'RepeatCount'
       NotificationStatus: 'NotificationStatus'
       EventId: 'EventId'
+      Severity: 'Severity'
+      IsScanner: 'IsScanner'
+      IsDuplicate: 'IsDuplicate'
+      Reason: 'Reason'
+      AlertStatus: 'AlertStatus'
+    }
+  }
+}
+resource scannerRule 'Microsoft.SecurityInsights/alertRules@2023-02-01' = {
+  name: guid(workspace.id, 'honeytoken-scanner-interaction')
+  scope: workspace
+  dependsOn: [ sentinelOnboarding, customTable ]
+  kind: 'Scheduled'
+  properties: {
+    displayName: 'Honeytoken automated scanner interaction'
+    description: 'Scanner-classified first hits. Review automation and gateway context; User-Agent heuristics are not attribution.'
+    enabled: true
+    severity: 'Medium'
+    query: loadTextContent('../docs/kql/analytics-scanner.kql')
+    queryFrequency: 'PT5M'
+    queryPeriod: 'PT1H'
+    triggerOperator: 'GreaterThan'
+    triggerThreshold: 0
+    suppressionEnabled: false
+    suppressionDuration: 'PT5M'
+    tactics: [ 'Collection' ]
+    techniques: []
+    eventGroupingSettings: { aggregationKind: 'AlertPerResult' }
+    incidentConfiguration: {
+      createIncident: true
+      groupingConfiguration: {
+        enabled: true
+        matchingMethod: 'Selected'
+        groupByCustomDetails: [ 'CanaryId' ]
+        reopenClosedIncident: false
+        lookbackDuration: 'PT1H'
+      }
+    }
+    entityMappings: [
+      {
+        entityType: 'IP'
+        fieldMappings: [
+          { identifier: 'Address', columnName: 'SourceIp' }
+        ]
+      }
+    ]
+    customDetails: {
+      CanaryId: 'CanaryId'
+      ArtifactName: 'ArtifactName'
+      Classification: 'Classification'
+      FirstHit: 'FirstHit'
+      RepeatCount: 'RepeatCount'
+      NotificationStatus: 'NotificationStatus'
+      EventId: 'EventId'
+      Severity: 'Severity'
+      IsScanner: 'IsScanner'
+      IsDuplicate: 'IsDuplicate'
+      Reason: 'Reason'
+      AlertStatus: 'AlertStatus'
     }
   }
 }
@@ -352,4 +433,6 @@ output analyticRuleName string = analyticRule.name
 output receiverIdentityName string = identity.name
 output receiverPrincipalId string = identity.properties.principalId
 output containerAppName string = deployContainerApp ? containerApp.name : ''
-output containerAppFqdn string = deployContainerApp ? containerApp.properties.configuration.ingress.fqdn : ''
+output containerAppFqdn string = deployContainerApp ? containerApp!.properties.configuration.ingress.fqdn : ''
+
+output scannerRuleName string = scannerRule.name
