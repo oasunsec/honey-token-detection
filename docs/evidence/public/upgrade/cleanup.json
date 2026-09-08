@@ -1,0 +1,7 @@
+{
+  "test_tokens_revoked": 9,
+  "temporary_operator_role_removed": true,
+  "events_retained": true,
+  "resource_group_teardown": false,
+  "cost_measured": false
+}

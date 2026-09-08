@@ -1,10 +1,12 @@
 # Honey Token - screenshot walkthrough
 
-Project walkthrough recorded on 7 September 2026, covering setup, deployment, document retrieval, event triage, Sentinel ingestion, and tests. Word and GitHub images are application captures; Azure images use saved deployment responses and query results.
+Historical baseline walkthrough recorded on 7 September 2026, covering setup, deployment, document retrieval, event triage, Sentinel ingestion, and tests. Word and GitHub images are application captures; Azure images use saved deployment responses and query results.
 
 Account details, email addresses, source IPs, tenant/subscription identifiers, callback tokens, and resource endpoints are redacted or excluded. Raw records remain outside this package.
 
 Evidence files are stored in this folder. The offline `index.html` gallery works after downloading the folder. Image hashes are recorded in [captions.json](captions.json).
+
+The original images and video are preserved. They show the original all-High rule, not the upgraded analytics. See the [detection release report](../../../VALIDATION.md) and [new evidence](upgrade/README.md) for the current implementation.
 
 ## Browse the evidence
 

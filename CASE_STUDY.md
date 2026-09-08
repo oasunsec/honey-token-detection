@@ -32,14 +32,28 @@ The Word run and the Azure run were separate. Word exercised the local receiver;
 
 ## Failure handling and regression coverage
 
-An SMTP exception could previously interrupt the callback response and prevent the Sentinel adapter from running. The fix retained the event, recorded the failed notification, continued the independent ingestion attempt, and returned the GIF. A [regression test](tests/test_app.py#L207) covers that path.
+An SMTP exception could previously interrupt the callback response and prevent the Sentinel adapter from running. The fix retained the event, recorded the failed notification, continued the independent ingestion attempt, and returned the GIF. A [regression test](tests/test_app.py) covers that path.
 
 A non-ASCII management key could trigger a server error during comparison. The corrected comparison returns 401. Missing Sentinel configuration now records `sentinel_status=disabled` instead of leaving an ambiguous pending state.
 
-The final suite passed 16 tests with two dependency deprecation warnings. The Docker build context is allowlisted, Compose binds to loopback, and Uvicorn access logs are disabled because callback paths contain live tokens.
+The baseline suite passed 16 tests with two dependency deprecation warnings. The Docker build context is allowlisted, Compose binds to loopback, and Uvicorn access logs are disabled because callback paths contain live tokens.
+
+## Preserving triage in Sentinel
+
+The first integration dropped receiver severity from its ingestion schema. Its single High rule selected scanner and repeat rows along with genuine-looking access. I added structured triage fields, two severity-specific analytics, repeat counts, and an investigation query keyed by a hashed canary ID.
+
+The first upgraded cloud run exposed rotating ingress peer addresses. Including SourceIp in the repeat key caused consecutive callbacks to appear as separate first hits. I changed suppression to canary plus User-Agent and grouped incidents by canary ID. Every source remains stored; two clients with the same canary and UA share the suppression window. Proxy trust stays disabled.
+
+The release now persists the observation before triage, isolates both delivery attempts, removes raw SDK error text from diagnostics, and excludes repeated rows from both analytic rules. [Release validation](VALIDATION.md) records the deployed results and continuous Word test without changing the original evidence.
+
+## Closing the Word-to-cloud gap
+
+Opened a newly generated DOCX in Word with its external image pointing to the deployed receiver. Word requested the pixel at `2026-09-08T00:29:38.667730Z`. I matched event `762163e649744aa4bd129ef081e1db4d` across Table Storage and Log Analytics, then matched the Sentinel alert to **High incident 17**. Office and endpoint policies stayed unchanged.
+
+The same release test sent three controlled non-scanner callbacks and two scanner callbacks. Six total events, including Word, reached storage and Log Analytics. Sentinel created two High incidents and one Medium scanner incident. The three repeat rows stayed searchable, with repeat counts 1, 2, and 1, and created no extra alerts. The [cloud evidence](docs/evidence/public/upgrade/README.md) contains the event-to-incident joins.
 
 ## Scope of the result
 
-The evidence covers a local Word callback and a separate Azure-to-Sentinel delivery path. It does not identify the person behind a callback, prove document exfiltration, or cover every Office and network policy. [Operational limits](LIMITATIONS.md) and [viewer coverage](COMPATIBILITY.md) keep those boundaries explicit.
+The evidence now includes the original separate tests and a continuous Word-to-Sentinel run. It does not identify the person behind a callback, prove document exfiltration, or cover every Office and network policy. [Operational limits](LIMITATIONS.md) and [viewer coverage](COMPATIBILITY.md) keep those boundaries explicit.
 
 [View the screenshots](docs/evidence/public/README.md) · [Run the project](docs/SETUP.md) · [Test details](TESTING.md)

@@ -1,4 +1,4 @@
-# Run locally
+# Run locally (release 0.2.2)
 
 Run these commands from the repository root. The local walkthrough uses synthetic documents and a loopback receiver. In Windows PowerShell, use `curl.exe` where the Bash examples use `curl`.
 
@@ -45,7 +45,7 @@ pip install -r requirements.txt
 ### 3. Start the API
 
 ```bash
-uvicorn app.main:app --reload --no-access-log
+uvicorn app.main:app --reload --no-access-log --no-proxy-headers
 ```
 
 Leave the API running. Open a second terminal in the repository root and activate the same virtual environment for the remaining commands.
@@ -106,7 +106,7 @@ az account set --subscription '<subscription name or id>'
 .\scripts\azure\validate.ps1
 ```
 
-The scripts create billable resources. [AZURE_DEPLOYMENT.md](../AZURE_DEPLOYMENT.md) records the deployed components; [COST_AND_TEARDOWN.md](../COST_AND_TEARDOWN.md) contains the cleanup command. The Azure receiver exposes health and callback routes; management operations remain local.
+The scripts create billable resources. [AZURE_DEPLOYMENT.md](../AZURE_DEPLOYMENT.md) records the deployed components; [COST_AND_TEARDOWN.md](../COST_AND_TEARDOWN.md) contains the cleanup command. The Azure receiver runs in receiver-only mode: `/health` and callback routes are exposed, while management and interactive documentation routes return `404`. Create tokens and decoys through the local management API or CLI before deployment.
 
 ## Management API protection
 
@@ -150,10 +150,10 @@ Do not commit credentials to Git.
 Example email subject:
 
 ```text
-[HONEY-TOKEN] Synthetic_Forecast.docx triggered (HIGH)
+[CANARY] Synthetic_Forecast.docx triggered (HIGH)
 ```
 
-The body includes a short hashed canary identifier, filename, timestamp, source IP, User-Agent, triage label and duplicate state. The raw callback token is not placed in the alert body. Each persisted event records `alert_status` as `sent`, `suppressed`, `disabled`, or `failed`; failed delivery includes a bounded error message for diagnosis.
+The body includes a short hashed canary identifier, filename, timestamp, source IP, User-Agent, triage label and duplicate state. The raw callback token is not placed in the alert body. Each persisted event records `alert_status` as `sent`, `suppressed`, `disabled`, or `failed`; failed delivery records an exception category and numeric status where available.
 
 ## Triage logic
 
@@ -162,12 +162,18 @@ Each callback produces a structured event:
 ```json
 {
   "event_type": "canary_trigger",
-  "triage_label": "Honeytoken trigger - potential unauthorized access",
-  "severity": "high"
+  "classification": "honeytoken_access",
+  "is_scanner": false,
+  "first_hit": true,
+  "repeat_count": 0,
+  "severity": "high",
+  "recommended_action": "investigate"
 }
 ```
 
-A small scanner heuristic reduces obvious automated requests to `medium` severity. Correlate these events with endpoint, identity, and audit telemetry during investigation.
+Requests whose User-Agent matches the scanner or command-line markers are classified as `automated_scanner` with `medium` severity; other requests retain the token's configured severity. Repeat suppression matches the token and User-Agent within the configured deduplication window (five minutes by default), and records `first_hit` and `repeat_count`. Source forwarding headers are ignored by default (`CANARY_TRUST_PROXY_HEADERS=false`), so the recorded source is the direct connection peer. Correlate events with endpoint, identity, and audit telemetry during investigation.
+
+The cloud deployment carries release identifier `0.2.2` into the normalized event schema. Sentinel has two scheduled rules: High or Critical non-scanner first hits, and Medium scanner first hits. Repeat rows remain searchable but do not create notification or analytic-rule alerts.
 
 ## API
 
@@ -181,7 +187,7 @@ Content-Type: application/json
   "name": "Synthetic forecast",
   "filename": "Synthetic_Forecast.docx",
   "severity": "high",
-  "notes": "Generated for authorized testing"
+  "notes": "Synthetic forecast document"
 }
 ```
 
@@ -226,5 +232,5 @@ Then use `http://localhost:8000`.
 pytest -q
 ```
 
-The 16 tests cover callbacks, duplicate suppression, scanner triage, token disabling, management authentication, receiver routing, DOCX generation, filename validation, event redaction, local SMTP delivery, and delivery-failure isolation.
+The tests cover callbacks, duplicate suppression, scanner triage, token disabling, management authentication, receiver routing, DOCX generation, filename validation, event redaction, local SMTP delivery, and delivery-failure isolation.
 

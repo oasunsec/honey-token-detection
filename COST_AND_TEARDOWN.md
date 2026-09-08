@@ -11,3 +11,5 @@ Run this only after reviewing the resource group and exporting any records to re
 ```powershell
 .\scripts\azure\destroy.ps1 -ResourceGroup rg-canary-cloudsec-validation -Confirm
 ```
+
+The detection upgrade reused the same resource group and added a second scheduled rule. Builds, callbacks, ingestion, and scheduled queries can incur cost. No cost measurement was taken and resources were not torn down. All nine upgrade test tokens were revoked and the temporary table-scoped operator role was removed after validation. Event records were retained. [Cleanup record](docs/evidence/public/upgrade/cleanup.json).

@@ -1,0 +1,14 @@
+SMTP sink transcript (redacted)
+S: 220 loopback SMTP sink ready
+C: EHLO [LOCAL CLIENT]
+S: 250 OK
+C: MAIL [REDACTED]
+S: 250 OK
+C: RCPT [REDACTED]
+S: 250 OK
+C: DATA
+S: 354 End with dot
+S: 250 Accepted
+C: QUIT
+S: 221 Bye
+Result: callbacks=2 | persisted_events=2 | accepted_messages=1 | alert_statuses=suppressed,sent | raw_token_in_message=absent

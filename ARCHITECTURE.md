@@ -1,8 +1,28 @@
 # Architecture
 
-The system has two exercised paths: a local Word callback into SQLite, and a controlled cloud callback through Azure storage, Logs Ingestion, and Sentinel.
+The original tests exercised local Word → SQLite and controlled callback → Azure → Sentinel separately. Release 0.2.2 also traced Word → public Azure receiver → Table Storage → Log Analytics → High Sentinel incident.
 
 [![Honey Token: separate local Word and Azure-to-Sentinel event paths](docs/diagrams/tested-event-paths.png)](docs/diagrams/tested-event-paths.png)
+
+## Current detection flow
+
+```mermaid
+flowchart TD
+  A[Decoy retrieval] --> B[Persist observation]
+  B --> C[Structured receiver triage]
+  C --> D[Persist classification and repeat metadata]
+  D --> E[Console or SMTP decision]
+  E --> F[Independent Logs Ingestion attempt]
+  F --> G{Sentinel eligibility}
+  G -->|Non-scanner first hit, high or critical| H[High incident]
+  G -->|Scanner first hit| I[Medium incident]
+  G -->|Repeat| J[Retained for investigation]
+  H --> K[Analyst correlation]
+  I --> K
+  J --> K
+```
+
+The image above preserves the original two exercised paths. The flowchart describes current processing; [validation](VALIDATION.md) records which paths were demonstrated for this release.
 
 ## Components and connections
 
@@ -10,11 +30,11 @@ The system has two exercised paths: a local Word callback into SQLite, and a con
 | --- | --- |
 | Local generator and Word | Created a DOCX with an external pixel; Word requested the loopback receiver |
 | Local receiver | Stored the callback in SQLite and recorded triage and console-alert outcomes |
-| Azure receiver | Accepted controlled HTTPS callbacks in Container Apps; management routes returned 404 |
-| Azure Table Storage | Stored token events in `CanaryHits` and delivery state in `NotificationOutbox` |
+| Azure receiver | Accepted controlled HTTPS callbacks and a real Word request in Container Apps; management routes returned 404 |
+| Azure Table Storage | Stored events and delivery outcomes in `CanaryHits`; `NotificationOutbox` remains unused |
 | Notification handler | Recorded console or SMTP delivery independently of Sentinel ingestion |
 | Logs Ingestion adapter | Sent normalized events through the Direct DCR into `CanaryHit_CL` |
-| Sentinel rule | Evaluated callback rows every five minutes and created a high-severity incident |
+| Sentinel rule | Separates eligible High first hits from Medium scanners; excludes repeat rows |
 | Managed identity | Supplied scoped registry, storage, and DCR permissions |
 
 ## Source files

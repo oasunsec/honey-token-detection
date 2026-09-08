@@ -1,0 +1,32 @@
+[
+  {
+    "scenario": "genuine",
+    "status": 200,
+    "bytes": 34,
+    "content_type": "image/gif"
+  },
+  {
+    "scenario": "genuine",
+    "status": 200,
+    "bytes": 34,
+    "content_type": "image/gif"
+  },
+  {
+    "scenario": "genuine",
+    "status": 200,
+    "bytes": 34,
+    "content_type": "image/gif"
+  },
+  {
+    "scenario": "scanner",
+    "status": 200,
+    "bytes": 34,
+    "content_type": "image/gif"
+  },
+  {
+    "scenario": "scanner",
+    "status": 200,
+    "bytes": 34,
+    "content_type": "image/gif"
+  }
+]

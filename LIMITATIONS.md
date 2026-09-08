@@ -2,22 +2,28 @@
 
 ## Collection and attribution
 
-The DOCX callback depends on the viewer loading the external image relationship and having network access. Protected View, external-content policy, proxies, DNS controls, endpoint security, or document rewriting can block it.
+A callback proves resource retrieval. It does not prove exfiltration or who opened a document. An observed IP may belong to NAT, VPN, proxy, scanner, or security-gateway infrastructure. Requesters supply User-Agent values and can spoof or omit them. Scanner classification is a small heuristic, not proof of a human or attacker.
 
-The receiver stores the source IP observed at the ingress, User-Agent, timestamp, request path, triage result, severity, repeat decision, and delivery status. That source IP may belong to a NAT gateway, VPN, proxy, or scanner. The project did not correlate the event with identity, endpoint, or file-audit telemetry, so it cannot identify who opened the document or prove exfiltration.
+The DOCX callback requires a viewer to load external content with network access. Protected View, external-content policy, proxies, DNS controls, endpoint controls, or document rewriting can block it. Offline and air-gapped opens may never fire. [Viewer coverage](COMPATIBILITY.md) records observed behavior.
 
-## Delivery and storage
+Attribution requires endpoint, identity, DLP, and file-audit correlation. Honeytokens complement DLP, access controls, encryption, EDR, and SIEM monitoring; they do not replace them.
 
-Delivery is synchronous. A failed notification is recorded, but no retry worker was implemented. Duplicate suppression is best effort across concurrent receiver instances and does not provide atomic suppression across instances.
+## Persistence and delivery
 
-Azure Table Storage retains events and delivery outcomes. No tamper-evident archive or project retention policy was implemented.
+Observations are committed before triage and delivery. A storage failure before that commit prevents delivery. A process crash or triage failure after the initial commit can leave a pending event. SMTP and ingestion are synchronous with no retry worker. Status writes can fail after a send, leaving an ambiguous pending state while the other delivery path is still attempted.
 
-## Cloud deployment
+Repeats match token and User-Agent within a rolling five-minute window by default. Counts reflect earlier matching rows in that window, not lifetime activity. Only earlier observations count toward suppression: SQLite insertion order and Azure timestamp/UUID order prevent two visible concurrent rows suppressing each other. This is not a distributed atomic claim; races and delayed visibility can still cause extra first-hit decisions. Changing UA can start another window. Source changes are retained but do not reset suppression, because ingress peer addresses can rotate. Two clients with the same canary and UA share the window. With proxy trust disabled, SourceIp can represent an ingress proxy rather than the originating endpoint.
 
-The receiver uses Azure HTTPS ingress without a project-level rate limiter or WAF. Management routes are disabled in the deployed receiver, while provisioning remains a local operator action.
+Events remain mutable; there is no tamper-evident archive. Log Analytics retains 30 days. Azure Table needs an operator retention policy. The provisioned outbox table has no worker; outcomes are stored on event rows.
 
-The Sentinel rule runs every five minutes with a ten-minute lookback. It selects all `canary_trigger` rows, including scanner and repeat events, and assigns the rule's configured high severity. Receiver notification suppression does not suppress Sentinel rule evaluation; overlapping windows can select an event again.
+## Sentinel
 
-## Coverage
+First-access and scanner rules have High and Medium severity respectively. Duplicate rows are excluded from both. Each uses a five-minute ingestion slice, one-hour event horizon, and one-hour grouping by canary. Grouping does not guarantee exactly one incident forever. Replayed ingestion, scheduling jitter, closed incidents, platform grouping limits, and long ingestion delays remain concerns. Repeat enrichment requires a query.
 
-SMTP was exercised against a local test sink. Cloud SMTP was not configured. [COMPATIBILITY.md](COMPATIBILITY.md) records viewer coverage, and [COST_AND_TEARDOWN.md](COST_AND_TEARDOWN.md) records the resource lifecycle and cost status.
+Low/medium non-scanner tokens are retained but do not trigger the High rule. Older rows without the structured contract are excluded. Canary activation is checked at receipt, not rechecked during rule evaluation.
+
+## Deployment
+
+The HTTPS receiver has no project WAF or ingress rate limiter. Management routes and OpenAPI are disabled in receiver-only mode. Callback tokens remain in documents, private token storage, and transport paths; upstream services or endpoint products can observe them. [Security controls](SECURITY.md) describe these boundaries.
+
+SMTP was exercised against a loopback sink; cloud SMTP is not configured. [Resource lifecycle](COST_AND_TEARDOWN.md) records cost and cleanup status. Entra, Defender/EDR, SharePoint audit, Purview DLP, and proxy/firewall correlation are future work, not implemented integrations.

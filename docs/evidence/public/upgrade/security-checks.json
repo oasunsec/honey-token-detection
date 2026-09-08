@@ -1,0 +1,27 @@
+{
+  "https_only": true,
+  "acr_admin_disabled": true,
+  "roles": [
+    "AcrPull",
+    "Storage Table Data Contributor",
+    "Monitoring Metrics Publisher"
+  ],
+  "console_privacy": {
+    "logs_fetch_exit": 0,
+    "test_token_present": false
+  },
+  "storage_shared_keys_disabled": true,
+  "http_statuses": {
+    "/health": 200,
+    "/api/events": 404,
+    "/api/tokens": 404,
+    "/docs": 404,
+    "/openapi.json": 404
+  },
+  "health": {
+    "status": "ok",
+    "receiver_only": true,
+    "receiver_version": "0.2.2",
+    "storage_backend": "azure_table"
+  }
+}
