@@ -186,7 +186,8 @@ def test_failed_alert_is_persisted(monkeypatch, tmp_path: Path):
     event = client.get("/api/events").json()[0]
     assert response.status_code == 200
     assert event["alert_status"] == "failed"
-    assert "safe test SMTP failure" in event["alert_error"]
+    assert event["alert_error"] == "[redacted diagnostic]"
+    assert client.app.state.db.list_events()[0]["alert_error"] == "OSError"
 
 
 def test_email_alert_content(tmp_path: Path):

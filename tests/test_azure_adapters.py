@@ -38,5 +38,6 @@ def test_ingestion_record_excludes_raw_callback_token(monkeypatch):
         "validation",
     )
     record = captured["logs"][0]
-    assert record["CanaryId"] == "public-id"
+    from app.privacy import public_id
+    assert record["CanaryId"] == public_id("raw-secret-token")
     assert "raw-secret-token" not in str(record)

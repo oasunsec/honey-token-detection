@@ -5,6 +5,7 @@ import uuid
 
 from azure.data.tables import TableServiceClient
 from azure.identity import DefaultAzureCredential
+from azure.core.exceptions import ResourceNotFoundError
 
 
 class AzureTableDatabase:
@@ -36,7 +37,7 @@ class AzureTableDatabase:
     def get_token(self, token_id: str) -> dict | None:
         try:
             entity = self.hits.get_entity(partition_key="token", row_key=token_id)
-        except Exception:
+        except ResourceNotFoundError:
             return None
         token = dict(entity)
         token["id"] = token.get("RowKey", token_id)
@@ -64,6 +65,18 @@ class AzureTableDatabase:
             parameters={"token_id": token_id, "source_ip": source_ip, "user_agent": user_agent},
         )
         return any(row.get("occurred_at", "") >= since_iso for row in rows)
+
+    def matching_event_count(self, token_id, user_agent, since_iso, exclude_id, occurred_at) -> int:
+        rows = self.hits.query_entities(
+            "PartitionKey eq 'event' and token_id eq @token and user_agent eq @ua and occurred_at ge @since and occurred_at le @until",
+            parameters={"token": token_id, "ua": user_agent, "since": since_iso, "until": occurred_at},
+        )
+        # Deterministic ordering prevents simultaneous observations suppressing each other.
+        return sum(1 for row in rows
+                   if (row.get("occurred_at", ""), row.get("RowKey", "")) < (occurred_at, exclude_id))
+
+    def set_triage(self, event_id, values: dict) -> None:
+        self._merge_event(event_id, values)
 
     def add_event(
         self,

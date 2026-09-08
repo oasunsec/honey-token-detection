@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -66,6 +67,36 @@ class Database:
                 con.execute("ALTER TABLE events ADD COLUMN sentinel_status TEXT NOT NULL DEFAULT 'pending'")
             if "sentinel_error" not in columns:
                 con.execute("ALTER TABLE events ADD COLUMN sentinel_error TEXT NOT NULL DEFAULT ''")
+
+            fields = {
+                "event_id": "TEXT NOT NULL DEFAULT ''",
+                "classification": "TEXT NOT NULL DEFAULT 'pending'",
+                "is_scanner": "INTEGER NOT NULL DEFAULT 0",
+                "reason": "TEXT NOT NULL DEFAULT ''",
+                "recommended_action": "TEXT NOT NULL DEFAULT ''",
+                "first_hit": "INTEGER NOT NULL DEFAULT 0",
+                "repeat_count": "INTEGER NOT NULL DEFAULT 0",
+                "active_canary": "INTEGER NOT NULL DEFAULT 1",
+            }
+            for name, declaration in fields.items():
+                if name not in columns:
+                    con.execute(f"ALTER TABLE events ADD COLUMN {name} {declaration}")
+
+    def set_triage(self, event_id, values: dict) -> None:
+        allowed = {"event_id", "classification", "is_scanner", "reason", "recommended_action",
+                   "first_hit", "repeat_count", "active_canary", "triage_label", "severity", "duplicate"}
+        if not values or not values.keys() <= allowed:
+            raise ValueError("Invalid triage fields")
+        with self.conn() as con:
+            assignments = ", ".join(f"{key}=?" for key in values)
+            con.execute(f"UPDATE events SET {assignments} WHERE id=?", (*values.values(), event_id))
+
+    def matching_event_count(self, token_id, user_agent, since_iso, exclude_id, occurred_at) -> int:
+        with self.conn() as con:
+            return con.execute(
+                "SELECT COUNT(*) FROM events WHERE token_id=? AND user_agent=? AND occurred_at>=? AND id<?",
+                (token_id, user_agent, since_iso, exclude_id),
+            ).fetchone()[0]
 
     def create_token(self, token_id: str, name: str, filename: str, severity: str, notes: str = "") -> dict:
         created_at = datetime.now(timezone.utc).isoformat()
@@ -136,6 +167,7 @@ class Database:
                 ),
             )
             event_id = cur.lastrowid
+            con.execute("UPDATE events SET event_id=? WHERE id=?", (uuid.uuid4().hex, event_id))
             row = con.execute("SELECT * FROM events WHERE id=?", (event_id,)).fetchone()
         return dict(row)
 
