@@ -1,0 +1,5 @@
+CanaryHit_CL
+| where TimeGenerated > ago(24h)
+| where EventType == "canary_trigger"
+| summarize Hits=count(), RepeatHits=countif(IsDuplicate == true), ScannerHits=countif(IsScanner == true), FirstSeen=min(EventTime), LastSeen=max(EventTime), Canaries=make_set(CanaryId, 100), Sources=make_set(SourceIp, 100) by SourceIp
+| order by Hits desc

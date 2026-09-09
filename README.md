@@ -1,295 +1,67 @@
-# Canary Honeytoken MVP
+# Honey Token
 
-A small self-hosted deception project for detecting interaction with sensitive-looking decoy files in an **authorized environment**.
+This project uses decoy Word and HTML files to detect when they are opened. Each decoy loads a small image from the receiver. The receiver records the request and can send the event to Microsoft Sentinel.
 
-The project creates a unique callback token, associates it with a decoy such as `Synthetic_Forecast.docx`, records callback telemetry, performs lightweight triage, suppresses duplicate notifications, and sends an alert to the console or email.
+[Case study](CASE_STUDY.md) - [Screenshots](docs/evidence/public/README.md) - [Run locally](docs/SETUP.md) - [Architecture](ARCHITECTURE.md)
 
-## What it is
-
-```text
-Decoy file
-   |
-   | external callback
-   v
-FastAPI token endpoint
-   |
-   +--> SQLite event log
-   |
-   +--> Triage rule
-   |
-   +--> Console / email alert
+```mermaid
+flowchart LR
+  A[Open decoy] --> B[Request image]
+  B --> C[Receiver records event]
+  C --> D[Table Storage or SQLite]
+  D --> E[Log Analytics]
+  E --> F[Microsoft Sentinel]
 ```
 
-This is a **detective deception control**. It does not replace encryption, access control, DLP, EDR, removable-media policy, or audit logging.
+## What I built
 
-## Current MVP
+- A FastAPI receiver with SQLite for local runs.
+- DOCX and HTML decoy generation with one callback token per file.
+- An Azure version that uses Container Apps, Table Storage, Log Analytics, and Microsoft Sentinel.
+- Sentinel rules that separate first access, scanner-like requests, and repeats.
+- Console and SMTP alerts, with delivery status saved on the event.
 
-- Unique cryptographically random token per decoy
-- Public callback endpoint returning a transparent 1x1 GIF
-- Token metadata stored in SQLite
-- HTML decoy generator
-- DOCX decoy generator using an external image relationship
-- Source IP, User-Agent, timestamp, token and filename logging
-- Simple scanner-aware triage
-- Five-minute duplicate notification suppression by default
-- Console alerts by default
-- SMTP email alerts as an option
-- Token disable endpoint
-- Event API for investigation
-- Automated tests
-- Docker support
+## What happens
 
-## Important limitation
+1. I create a token and a decoy file.
+2. The file contains a request for a small image.
+3. When the file is opened, the request reaches `/t/{token_id}/pixel.gif`.
+4. The receiver saves the event and marks it as a first hit, repeat, or scanner-like request.
+5. Local events stay in SQLite. Cloud events go to Table Storage and Log Analytics.
+6. Sentinel creates an alert for eligible first hits. Repeat events stay available for investigation but do not create another alert.
 
-A callback-based document token **does not guarantee detection of every file open**.
+Scanner-like requests are marked Medium. Other first hits use the severity set on the token. Public event output and SIEM records use a hash of the token instead of the raw token.
 
-The callback may not fire when:
+## Local demo
 
-- the endpoint is offline or air-gapped;
-- Microsoft Office or another viewer blocks external content;
-- Protected View prevents the resource from loading;
-- a proxy/firewall blocks the callback;
-- the file is copied without being opened;
-- the viewer does not support the external resource behavior.
+The demo opens `Financial_Records_CONFIDENTIAL.docx` in Word and records the callback from the local receiver.
 
-Also, a source IP is not identity. It can belong to a proxy, VPN, NAT gateway, mail-security scanner, sandbox, or resolver. Correlate the event with identity, endpoint, file-audit, DLP and network telemetry before attribution.
+[![Document creation, Word, and the recorded callback](docs/demo/local-word-callback.gif)](docs/demo/local-word-callback.mp4)
 
-## Quick start
+## Results
 
-### 1. Create a virtual environment
+| Test | Result |
+| --- | --- |
+| Word -> Azure -> Sentinel | The Word event reached Table Storage, Log Analytics, and High incident 17. |
+| Cloud callbacks | Six events were stored and ingested. Sentinel created two High incidents and one Medium scanner incident. |
+| Repeat callbacks | Three repeats were stored and did not create extra alerts. |
+| Local SMTP | Two events were stored and one email was accepted by the local SMTP sink. |
+| Test suite | `pytest -q` passed 43 tests. |
 
-```bash
-python -m venv .venv
-```
+## Documentation
 
-Linux/macOS:
+- [Case study](CASE_STUDY.md) - what I changed and what happened.
+- [Setup](docs/SETUP.md) - run the receiver locally or deploy it to Azure.
+- [Architecture](ARCHITECTURE.md) - the main components and data flow.
+- [Sentinel rules](SENTINEL.md) - event fields, rules, and investigation queries.
+- [Validation results](VALIDATION.md) - test and cloud results.
+- [Screenshots and evidence](docs/evidence/public/README.md) - saved proof from the runs.
+- [Cost and teardown](COST_AND_TEARDOWN.md) - resource cleanup command.
 
-```bash
-source .venv/bin/activate
-```
+## Limits
 
-Windows PowerShell:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-### 2. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Start the API
-
-```bash
-uvicorn app.main:app --reload
-```
-
-Check:
-
-```bash
-curl http://127.0.0.1:8000/health
-```
-
-Expected:
-
-```json
-{"status":"ok"}
-```
-
-### 4. Create a financial-document decoy
-
-```bash
-python -m app.cli create \
-  --name "Finance bait" \
-  --filename "Synthetic_Forecast.docx" \
-  --format docx
-```
-
-The command returns a token ID, callback URL and generated decoy path.
-
-### 5. Validate the detector before opening the document
-
-Call the callback URL returned by the CLI:
-
-```bash
-curl -A "Lab-Validation" "http://127.0.0.1:8000/t/YOUR_TOKEN/pixel.gif" -o /dev/null
-```
-
-You should see a console alert and an event in:
-
-```text
-GET /api/events
-```
-
-Open interactive API docs at:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-### 6. Test the DOCX in a controlled lab
-
-Open the generated file on a lab endpoint that can reach the callback server. Record whether the viewer actually requests the external resource. If it does not, treat that as an observed product-control limitation rather than trying to bypass the viewer's security controls.
-
-## Email alerts
-
-The default alert mode is `console`. To use SMTP, configure environment variables based on `.env.example`:
-
-```text
-CANARY_ALERT_MODE=email
-CANARY_ALERT_TO=security@example.com
-CANARY_SMTP_HOST=smtp.example.com
-CANARY_SMTP_PORT=587
-CANARY_SMTP_USER=...
-CANARY_SMTP_PASSWORD=...
-CANARY_SMTP_FROM=canary-alerts@example.com
-CANARY_SMTP_STARTTLS=true
-```
-
-Do not commit credentials to Git.
-
-Example email subject:
-
-```text
-[CANARY] Synthetic_Forecast.docx triggered (HIGH)
-```
-
-The body includes the token, filename, timestamp, source IP, User-Agent, triage label and duplicate state.
-
-## Triage logic
-
-The MVP produces a structured event:
-
-```json
-{
-  "event_type": "canary_trigger",
-  "triage_label": "Honeytoken trigger - potential unauthorized access",
-  "severity": "high"
-}
-```
-
-A small scanner heuristic reduces obvious automated requests to `medium` severity. This is deliberately simple. A real environment should enrich the event with endpoint, identity and audit telemetry.
-
-A useful production workflow is:
-
-```text
-Canary fires
-   -> identify token/decoy
-   -> determine source context
-   -> correlate user + endpoint
-   -> inspect file-access/DLP events
-   -> scope related activity
-   -> decide benign scanner vs suspicious access
-   -> contain/escalate if supported by evidence
-```
-
-## API
-
-### Create token
-
-```http
-POST /api/tokens
-Content-Type: application/json
-
-{
-  "name": "Finance bait",
-  "filename": "Synthetic_Forecast.docx",
-  "severity": "high",
-  "notes": "Placed in authorized finance deception lab"
-}
-```
-
-### Generate decoy
-
-```http
-POST /api/decoys
-Content-Type: application/json
-
-{
-  "token_id": "TOKEN_ID",
-  "format": "docx",
-  "output_dir": "decoys"
-}
-```
-
-### List events
-
-```http
-GET /api/events
-```
-
-### Disable token
-
-```http
-POST /api/tokens/TOKEN_ID/disable
-```
-
-## Docker
-
-```bash
-docker compose up --build
-```
-
-Then use `http://localhost:8000`.
-
-## Testing
-
-```bash
-pytest -q
-```
-
-The current tests cover token triggering, duplicate suppression, scanner triage and token disabling.
-
-## Suggested GitHub roadmap
-
-### v0.1 — MVP
-Current repository.
-
-### v0.2 — Secure management plane
-- API-key or SSO authentication for management endpoints
-- TLS deployment guidance
-- role separation
-- audit trail for token creation/disable actions
-
-### v0.3 — Better triage
-- trusted scanner allowlist
-- source-network context
-- token criticality
-- enrichment adapters
-- confidence score
-
-### v0.4 — SOC integration
-- Splunk HEC output
-- Microsoft Sentinel/Log Analytics output
-- generic webhook adapter
-- normalized JSON schema
-
-### v0.5 — Deception management
-- multiple token types
-- ownership/expiry
-- bulk token generation
-- token health testing
-- dashboard
-
-## What this project demonstrates
-
-For a security-engineering portfolio, this repo shows:
-
-- deception/honeytoken concepts;
-- FastAPI service development;
-- event normalization;
-- basic detection/triage engineering;
-- false-positive handling;
-- alerting;
-- security limitations and threat-model thinking;
-- a path to SIEM integration.
-
-## Authorized use only
-
-Deploy decoys only in systems and networks you own or are authorized to monitor. Use synthetic bait data. Do not include real financial records, credentials or personal data in decoy documents.
+The documents use synthetic data. A callback shows that a file requested the image; it does not identify a person or prove that a document was copied. Scanner detection is a heuristic, and viewer behavior depends on Office and endpoint policy.
 
 ## License
 
-MIT
+[MIT](LICENSE)

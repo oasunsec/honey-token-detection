@@ -8,19 +8,33 @@ import zipfile
 TRANSPARENT_GIF_B64 = "R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
 
 
+def validate_filename(filename: str) -> str:
+    """Require a plain file name so decoy generation cannot escape its output directory."""
+    if (
+        not filename
+        or "\x00" in filename
+        or "/" in filename
+        or "\\" in filename
+        or Path(filename).name != filename
+    ):
+        raise ValueError("filename must be a plain file name without path components")
+    return filename
+
+
 def callback_url(base_url: str, token_id: str) -> str:
     return f"{base_url.rstrip('/')}/t/{token_id}/pixel.gif"
 
 
 def create_html_decoy(output: Path, filename: str, url: str) -> Path:
+    validate_filename(filename)
     output.mkdir(parents=True, exist_ok=True)
     path = output / filename
     html = f"""<!doctype html>
 <html>
-<head><meta charset=\"utf-8\"><title>Synthetic Forecast</title></head>
+<head><meta charset=\"utf-8\"><title>Financial Records</title></head>
 <body>
-<h1>Synthetic Forecast</h1>
-<p>Synthetic document used for a honey token test.</p>
+<h1>Financial Records</h1>
+<p>CONFIDENTIAL</p>
 <img src=\"{escape(url, quote=True)}\" alt=\"\" width=\"1\" height=\"1\" style=\"display:none\">
 </body>
 </html>
@@ -36,6 +50,7 @@ def create_docx_decoy(output: Path, filename: str, url: str) -> Path:
     deliberate limitation of callback-based document canaries and should be
     validated in the target lab before relying on it.
     """
+    validate_filename(filename)
     output.mkdir(parents=True, exist_ok=True)
     path = output / filename
 
@@ -63,8 +78,8 @@ def create_docx_decoy(output: Path, filename: str, url: str) -> Path:
  xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\"
  xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\">
  <w:body>
-  <w:p><w:r><w:t>Synthetic Forecast</w:t></w:r></w:p>
-  <w:p><w:r><w:t>Synthetic document used for a honey token test.</w:t></w:r></w:p>
+  <w:p><w:r><w:t>Financial Records</w:t></w:r></w:p>
+  <w:p><w:r><w:t>CONFIDENTIAL</w:t></w:r></w:p>
   <w:p><w:r><w:drawing>
    <wp:inline distT=\"0\" distB=\"0\" distL=\"0\" distR=\"0\">
     <wp:extent cx=\"9525\" cy=\"9525\"/>

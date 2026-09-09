@@ -1,0 +1,46 @@
+{
+  "activity-by-canary.kql": {
+    "executed": true,
+    "rows": 10
+  },
+  "activity-by-source.kql": {
+    "executed": true,
+    "rows": 3
+  },
+  "analytics-first-access.kql": {
+    "executed": true,
+    "rows": 2
+  },
+  "analytics-scanner.kql": {
+    "executed": true,
+    "rows": 1
+  },
+  "canary-first-hits.kql": {
+    "executed": true,
+    "rows": 14
+  },
+  "canary-high-severity.kql": {
+    "executed": true,
+    "rows": 7
+  },
+  "canary-hits.kql": {
+    "executed": true,
+    "rows": 22
+  },
+  "canary-repeat-hits.kql": {
+    "executed": true,
+    "rows": 7
+  },
+  "canary-scanner-hits.kql": {
+    "executed": true,
+    "rows": 6
+  },
+  "investigate-canary.kql": {
+    "executed": true,
+    "rows": 3
+  },
+  "repeat-activity-over-time.kql": {
+    "executed": true,
+    "rows": 10
+  }
+}

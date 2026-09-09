@@ -1,0 +1,102 @@
+[
+  {
+    "displayName": "Honeytoken first-hit suspicious access",
+    "severity": "High",
+    "enabled": true,
+    "query": "// Five-minute ingestion slice prevents reselecting rows across overlapping lookbacks.\r\n// One-hour event horizon permits up to 55 minutes of ingestion delay.\r\nCanaryHit_CL\r\n| where TimeGenerated > ago(1h)\r\n| where ingestion_time() > ago(5m)\r\n| where EventType == \"canary_trigger\" and ActiveCanary == true\r\n| where FirstHit == true and IsDuplicate == false\r\n| where Classification == \"honeytoken_access\" and IsScanner == false\r\n| where Severity in (\"high\", \"critical\")\r\n| summarize arg_max(TimeGenerated, *) by EventId\r\n",
+    "queryFrequency": "PT5M",
+    "queryPeriod": "PT1H",
+    "incidentConfiguration": {
+      "createIncident": true,
+      "groupingConfiguration": {
+        "enabled": true,
+        "groupByAlertDetails": null,
+        "groupByCustomDetails": [
+          "CanaryId"
+        ],
+        "groupByEntities": null,
+        "lookbackDuration": "PT1H",
+        "matchingMethod": "Selected",
+        "reopenClosedIncident": false
+      }
+    },
+    "customDetails": {
+      "AlertStatus": "AlertStatus",
+      "ArtifactName": "ArtifactName",
+      "CanaryId": "CanaryId",
+      "Classification": "Classification",
+      "EventId": "EventId",
+      "FirstHit": "FirstHit",
+      "IsDuplicate": "IsDuplicate",
+      "IsScanner": "IsScanner",
+      "NotificationStatus": "NotificationStatus",
+      "Reason": "Reason",
+      "RepeatCount": "RepeatCount",
+      "Severity": "Severity"
+    },
+    "entityMappings": [
+      {
+        "entityType": "IP",
+        "fieldMappings": [
+          {
+            "columnName": "SourceIp",
+            "identifier": "Address"
+          }
+        ]
+      }
+    ],
+    "eventGroupingSettings": {
+      "aggregationKind": "AlertPerResult"
+    }
+  },
+  {
+    "displayName": "Honeytoken automated scanner interaction",
+    "severity": "Medium",
+    "enabled": true,
+    "query": "// Five-minute ingestion slice prevents reselecting rows across overlapping lookbacks.\r\n// One-hour event horizon permits up to 55 minutes of ingestion delay.\r\nCanaryHit_CL\r\n| where TimeGenerated > ago(1h)\r\n| where ingestion_time() > ago(5m)\r\n| where EventType == \"canary_trigger\" and ActiveCanary == true\r\n| where FirstHit == true and IsDuplicate == false\r\n| where Classification == \"automated_scanner\" and IsScanner == true\r\n| where Severity == \"medium\"\r\n| summarize arg_max(TimeGenerated, *) by EventId\r\n",
+    "queryFrequency": "PT5M",
+    "queryPeriod": "PT1H",
+    "incidentConfiguration": {
+      "createIncident": true,
+      "groupingConfiguration": {
+        "enabled": true,
+        "groupByAlertDetails": null,
+        "groupByCustomDetails": [
+          "CanaryId"
+        ],
+        "groupByEntities": null,
+        "lookbackDuration": "PT1H",
+        "matchingMethod": "Selected",
+        "reopenClosedIncident": false
+      }
+    },
+    "customDetails": {
+      "AlertStatus": "AlertStatus",
+      "ArtifactName": "ArtifactName",
+      "CanaryId": "CanaryId",
+      "Classification": "Classification",
+      "EventId": "EventId",
+      "FirstHit": "FirstHit",
+      "IsDuplicate": "IsDuplicate",
+      "IsScanner": "IsScanner",
+      "NotificationStatus": "NotificationStatus",
+      "Reason": "Reason",
+      "RepeatCount": "RepeatCount",
+      "Severity": "Severity"
+    },
+    "entityMappings": [
+      {
+        "entityType": "IP",
+        "fieldMappings": [
+          {
+            "columnName": "SourceIp",
+            "identifier": "Address"
+          }
+        ]
+      }
+    ],
+    "eventGroupingSettings": {
+      "aggregationKind": "AlertPerResult"
+    }
+  }
+]

@@ -1,0 +1,9 @@
+// Set the public hashed CanaryId from the incident. Never paste a callback token.
+let canary = "REPLACE_WITH_PUBLIC_CANARY_ID";
+let related = materialize(CanaryHit_CL
+    | where TimeGenerated > ago(7d)
+    | where CanaryId == canary and EventType == "canary_trigger");
+related
+| join kind=inner (related | summarize RelatedHits=count(), RelatedScanners=countif(IsScanner == true), RelatedRepeats=countif(IsDuplicate == true) by CanaryId) on CanaryId
+| project EventTime, EventId, ArtifactName, Classification, Severity, IsScanner, IsDuplicate, FirstHit, RepeatCount, SourceIp, UserAgent, Reason, AlertStatus, RelatedHits, RelatedScanners, RelatedRepeats
+| order by EventTime asc

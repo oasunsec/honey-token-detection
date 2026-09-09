@@ -1,0 +1,11 @@
+{
+  "event_id": "57ec9fdb046f45b1a0b02f98e9f3a823",
+  "occurred_at": "2026-09-08T02:30:46.647465+00:00",
+  "filename": "Financial_Records_CONFIDENTIAL.docx",
+  "user_agent": "Mozilla/4.0 (compatible; ms-office; MSOffice 16)",
+  "classification": "honeytoken_access",
+  "severity": "high",
+  "first_hit": 1,
+  "repeat_count": 0,
+  "alert_status": "sent"
+}

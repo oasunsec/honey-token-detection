@@ -3,6 +3,7 @@ venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.pytest-tmp*/
 .env
 .env.*
 !.env.example
@@ -14,4 +15,7 @@ logs/
 generated/
 decoys/
 output/
+evidence-private/
+*.bicep.deploy.json
+*.bicep.deploy.parameters.json
 .DS_Store

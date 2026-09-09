@@ -1,0 +1,125 @@
+[
+  {
+    "scenario": "genuine",
+    "incident_number": 18,
+    "title": "Honeytoken first-hit suspicious access",
+    "severity": "High",
+    "created": "2026-09-08T00:39:30.01Z",
+    "system_alert_id": "4f0f356b-3d74-b467-66e2-0526fd065d46",
+    "alert_time": "2026-09-08T00:39:12.6940465Z",
+    "custom_details": {
+      "CanaryId": [
+        "d9d15f69157d7cff"
+      ],
+      "ArtifactName": [
+        "Synthetic_genuine_022.docx"
+      ],
+      "Classification": [
+        "honeytoken_access"
+      ],
+      "FirstHit": [
+        "True"
+      ],
+      "RepeatCount": [
+        "0"
+      ],
+      "EventId": [
+        "d14b6f87fb124f339db28d77774be0ef"
+      ],
+      "Severity": [
+        "high"
+      ],
+      "IsScanner": [
+        "False"
+      ],
+      "IsDuplicate": [
+        "False"
+      ],
+      "AlertStatus": [
+        "sent"
+      ]
+    }
+  },
+  {
+    "scenario": "word",
+    "incident_number": 17,
+    "title": "Honeytoken first-hit suspicious access",
+    "severity": "High",
+    "created": "2026-09-08T00:39:27.81Z",
+    "system_alert_id": "968cbcf9-a46a-bec0-0a20-7e752761eea5",
+    "alert_time": "2026-09-08T00:39:12.8177359Z",
+    "custom_details": {
+      "CanaryId": [
+        "658961b921ce90ab"
+      ],
+      "ArtifactName": [
+        "Synthetic_word_022.docx"
+      ],
+      "Classification": [
+        "honeytoken_access"
+      ],
+      "FirstHit": [
+        "True"
+      ],
+      "RepeatCount": [
+        "0"
+      ],
+      "EventId": [
+        "762163e649744aa4bd129ef081e1db4d"
+      ],
+      "Severity": [
+        "high"
+      ],
+      "IsScanner": [
+        "False"
+      ],
+      "IsDuplicate": [
+        "False"
+      ],
+      "AlertStatus": [
+        "sent"
+      ]
+    }
+  },
+  {
+    "scenario": "scanner",
+    "incident_number": 16,
+    "title": "Honeytoken automated scanner interaction",
+    "severity": "Medium",
+    "created": "2026-09-08T00:39:26.8833333Z",
+    "system_alert_id": "c5dcd41d-0417-5a4f-907f-985cfee1c2a4",
+    "alert_time": "2026-09-08T00:39:12.5503971Z",
+    "custom_details": {
+      "CanaryId": [
+        "355b1455d7f592f0"
+      ],
+      "ArtifactName": [
+        "Synthetic_scanner_022.docx"
+      ],
+      "Classification": [
+        "automated_scanner"
+      ],
+      "FirstHit": [
+        "True"
+      ],
+      "RepeatCount": [
+        "0"
+      ],
+      "EventId": [
+        "ff7ab7c5ea5f41af8b8826863995e195"
+      ],
+      "Severity": [
+        "medium"
+      ],
+      "IsScanner": [
+        "True"
+      ],
+      "IsDuplicate": [
+        "False"
+      ],
+      "AlertStatus": [
+        "sent"
+      ]
+    }
+  }
+]

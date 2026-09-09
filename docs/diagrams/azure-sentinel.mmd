@@ -1,0 +1,7 @@
+flowchart LR
+  H["Controlled<br/>HTTPS request"] --> R("Azure receiver<br/>Container Apps")
+  R --> T[("Table event<br/>and triage")]
+  T --> L["Log Analytics<br/>via DCR"]
+  L --> S["Sentinel incident<br/>Scheduled rule"]
+  classDef step fill:#eef4fc,stroke:#3975b5,color:#193e69,stroke-width:1.5px
+  class H,R,T,L,S step

@@ -1,0 +1,5 @@
+CanaryHit_CL
+| where TimeGenerated > ago(24h)
+| where EventType == "canary_trigger"
+| summarize Hits=count(), Repeats=countif(IsDuplicate == true), Scanners=countif(IsScanner == true) by bin(EventTime, 5m), CanaryId
+| order by EventTime asc

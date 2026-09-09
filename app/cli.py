@@ -7,7 +7,8 @@ import secrets
 
 from .config import Settings
 from .db import Database
-from .decoys import callback_url, create_docx_decoy, create_html_decoy
+from .azure_storage import AzureTableDatabase
+from .decoys import callback_url, create_docx_decoy, create_html_decoy, validate_filename
 
 
 def main() -> None:
@@ -16,7 +17,7 @@ def main() -> None:
 
     create = sub.add_parser("create", help="Create a token and decoy file")
     create.add_argument("--name", required=True)
-    create.add_argument("--filename", default="Synthetic_Forecast.docx")
+    create.add_argument("--filename", default="Financial_Records_CONFIDENTIAL.docx")
     create.add_argument("--format", choices=["html", "docx"], default="docx")
     create.add_argument("--severity", choices=["low", "medium", "high", "critical"], default="high")
     create.add_argument("--output", default="decoys")
@@ -24,9 +25,19 @@ def main() -> None:
 
     args = parser.parse_args()
     settings = Settings()
-    db = Database(settings.db_path)
+    settings.validate()
+    db = (
+        AzureTableDatabase(
+            settings.azure_storage_account_url,
+            settings.azure_table_hits,
+            settings.azure_table_outbox,
+        )
+        if settings.storage_backend == "azure_table"
+        else Database(settings.db_path)
+    )
 
     if args.command == "create":
+        validate_filename(args.filename)
         token_id = secrets.token_urlsafe(18)
         db.create_token(token_id, args.name, args.filename, args.severity, args.notes)
         url = callback_url(settings.base_url, token_id)
