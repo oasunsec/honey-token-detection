@@ -106,7 +106,7 @@ Recorded the resulting high-severity Sentinel incident. Account and resource ide
 
 **GitHub UI capture** - Source: `Job 101836165394 in Actions run 34152044446`.
 
-The main-branch Actions test job completed successfully and recorded 16 passing tests.
+The main-branch Actions test job completed successfully and recorded 16 passing tests. That was the suite on 7 September; the later detection upgrade brought it to 43 tests (see [VALIDATION.md](../../../VALIDATION.md)).
 
 ![GitHub Actions test run](12-github-pytest-output.jpg)
 
@@ -114,7 +114,7 @@ The main-branch Actions test job completed successfully and recorded 16 passing 
 
 **Recorded test output** - Source: `tests/test_smtp_delivery.py + portfolio/pytest.txt`.
 
-The integration test opened a real loopback SMTP connection, sent one DATA message after two callbacks, and confirmed two persisted events with sent/suppressed alert states. SMTP identities and callback tokens are redacted from the public record.
+The integration test opened a real loopback SMTP connection, sent one DATA message after two callbacks, and confirmed two persisted events with sent/suppressed alert states. SMTP identities and callback tokens are redacted from the public record. The "16 passed" in this image is the 7 September suite, before the upgrade to 43 tests.
 
 ![Local regression and SMTP delivery](13-evidence.jpg)
 
