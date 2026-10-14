@@ -34,6 +34,6 @@ Both rules run every five minutes. They search one hour of event time and the la
 
 ## Queries
 
-[Investigation queries](docs/kql/README.md) cover all hits, first hits, repeats, scanners, High candidates, and activity by canary or source. [Investigate a canary](docs/kql/investigate-canary.kql) joins the event details and related hits.
+[Investigation queries](kql/README.md) cover all hits, first hits, repeats, scanners, High candidates, and activity by canary or source. [Investigate a canary](kql/investigate-canary.kql) joins the event details and related hits.
 
-The [validation results](VALIDATION.md) show the observed cloud incidents. The [evidence walkthrough](docs/evidence/public/README.md) contains the saved records and screenshots.
+The [validation results](validation.md) show the observed cloud incidents. The [evidence walkthrough](evidence/public/README.md) contains the saved records and screenshots.

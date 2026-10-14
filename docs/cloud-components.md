@@ -12,4 +12,4 @@
 | Create detections | One rule handles High or Critical first hits and another handles Medium scanner first hits. Repeats are excluded. |
 | Clean up | The teardown script requires `-Confirm`. It was not run during the recorded work. |
 
-[Deployment](../AZURE_DEPLOYMENT.md) - [Architecture](../ARCHITECTURE.md)
+[Deployment](azure-deployment.md) - [Architecture](architecture.md)

@@ -106,7 +106,7 @@ az account set --subscription '<subscription name or id>'
 .\scripts\azure\validate.ps1
 ```
 
-The scripts create billable resources. [AZURE_DEPLOYMENT.md](../AZURE_DEPLOYMENT.md) records the deployed components; [COST_AND_TEARDOWN.md](../COST_AND_TEARDOWN.md) contains the cleanup command. The Azure receiver runs in receiver-only mode: `/health` and callback routes are exposed, while management and interactive documentation routes return `404`. Create tokens and decoys through the local management API or CLI before deployment.
+The scripts create billable resources. [AZURE_DEPLOYMENT.md](azure-deployment.md) records the deployed components; [COST_AND_TEARDOWN.md](teardown.md) contains the cleanup command. The Azure receiver runs in receiver-only mode: `/health` and callback routes are exposed, while management and interactive documentation routes return `404`. Create tokens and decoys through the local management API or CLI before deployment.
 
 ## Management API protection
 

@@ -8,7 +8,7 @@ Account details, email addresses, source IPs, tenant/subscription identifiers, c
 
 Evidence files are stored in this folder. The offline `index.html` gallery works after downloading the folder. Image hashes are recorded in [captions.json](captions.json).
 
-The original images are preserved, including the original all-High rule. The [local video](../../demo/README.md) was refreshed with the current sample filename. See the [detection release report](../../../VALIDATION.md) and [new evidence](upgrade/README.md) for the current analytics.
+The original images are preserved, including the original all-High rule. The [local video](../../demo/README.md) was refreshed with the current sample filename. See the [detection release report](../../validation.md) and [new evidence](upgrade/README.md) for the current analytics.
 
 ## Browse the evidence
 
@@ -106,7 +106,7 @@ Recorded the resulting high-severity Sentinel incident. Account and resource ide
 
 **GitHub UI capture** - Source: `Job 101836165394 in Actions run 34152044446`.
 
-The main-branch Actions test job completed successfully and recorded 16 passing tests. That was the suite on 7 September; the later detection upgrade brought it to 43 tests (see [VALIDATION.md](../../../VALIDATION.md)).
+The main-branch Actions test job completed successfully and recorded 16 passing tests. That was the suite on 7 September; the later detection upgrade brought it to 43 tests (see [validation results](../../validation.md)).
 
 ![GitHub Actions test run](12-github-pytest-output.jpg)
 

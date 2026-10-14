@@ -42,6 +42,6 @@ The [incident export](sentinel-incidents.json) preserves the alert's custom even
 
 The [SMTP transcript](smtp-result.txt) records an actual loopback send through the receiver: two callbacks, two persisted events, one accepted `DATA` message, and a suppressed repeat. Cloud SMTP was not configured.
 
-[Security checks](security-checks.json) record HTTPS ingress, disabled ACR admin, the receiver's three roles, and the console-log token check. [Cleanup](cleanup.json) records revoked test tokens and removal of temporary operator access. [Release validation](../../../../VALIDATION.md) includes 43 passing tests, infrastructure compilation, CI, the history scan, and remaining limitations.
+[Security checks](security-checks.json) record HTTPS ingress, disabled ACR admin, the receiver's three roles, and the console-log token check. [Cleanup](cleanup.json) records revoked test tokens and removal of temporary operator access. [Release validation](../../../validation.md) includes 43 passing tests, infrastructure compilation, CI, the history scan, and remaining limitations.
 
 The Azure records are field-selected exports from deployed APIs and queries. Source IPs, account/resource identifiers, raw callback URLs, and tokens are excluded. They are data records, not Azure portal screenshots. The original Word capture and full responses remain private.

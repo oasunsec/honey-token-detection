@@ -21,4 +21,4 @@ The first DCR hostname did not resolve. I changed the receiver to use the `logsI
 
 The app uses the Azure-provided HTTPS hostname. Forwarded headers and proxy rewriting are disabled, so the recorded source is the connection peer. Repeat matching uses the canary and User-Agent.
 
-[Deployment commands](docs/SETUP.md#azure-deployment) - [Sentinel rules](SENTINEL.md) - [Validation](VALIDATION.md) - [Teardown](COST_AND_TEARDOWN.md)
+[Deployment commands](setup.md#azure-deployment) - [Sentinel rules](sentinel.md) - [Validation](validation.md) - [Teardown](teardown.md)

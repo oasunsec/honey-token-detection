@@ -41,4 +41,4 @@ The Word test and the controlled Azure callback test were separate. The local Wo
 
 The files use synthetic data. The project shows that a decoy requested its callback image; it does not identify who opened the file or prove document exfiltration. Scanner detection is based on request markers, and Word behavior can change with Office and endpoint settings.
 
-[Screenshots](docs/evidence/public/README.md) - [Run locally](docs/SETUP.md) - [Test details](TESTING.md)
+[Screenshots](docs/evidence/public/README.md) - [Run locally](docs/setup.md) - [Test details](docs/testing.md)

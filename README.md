@@ -2,7 +2,7 @@
 
 This project uses decoy Word and HTML files to detect when they are opened. Each decoy loads a small image from the receiver. The receiver records the request and can send the event to Microsoft Sentinel.
 
-[Case study](CASE_STUDY.md) - [Screenshots](docs/evidence/public/README.md) - [Run locally](docs/SETUP.md) - [Architecture](ARCHITECTURE.md)
+[Case study](CASE_STUDY.md) - [Screenshots](docs/evidence/public/README.md) - [Run locally](docs/setup.md) - [Architecture](docs/architecture.md)
 
 ```mermaid
 flowchart LR
@@ -51,12 +51,12 @@ The demo opens `Financial_Records_CONFIDENTIAL.docx` in Word and records the cal
 ## Documentation
 
 - [Case study](CASE_STUDY.md) - what I changed and what happened.
-- [Setup](docs/SETUP.md) - run the receiver locally or deploy it to Azure.
-- [Architecture](ARCHITECTURE.md) - the main components and data flow.
-- [Sentinel rules](SENTINEL.md) - event fields, rules, and investigation queries.
-- [Validation results](VALIDATION.md) - test and cloud results.
+- [Setup](docs/setup.md) - run the receiver locally or deploy it to Azure.
+- [Architecture](docs/architecture.md) - the main components and data flow.
+- [Sentinel rules](docs/sentinel.md) - event fields, rules, and investigation queries.
+- [Validation results](docs/validation.md) - test and cloud results.
 - [Screenshots and evidence](docs/evidence/public/README.md) - saved proof from the runs.
-- [Cost and teardown](COST_AND_TEARDOWN.md) - resource cleanup command.
+- [Cost and teardown](docs/teardown.md) - resource cleanup command.
 
 ## Limits
 

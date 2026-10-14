@@ -1,19 +1,47 @@
-# Receiver details
+# Architecture
 
-The callback route is `/t/{token_id}/pixel.gif`. Management routes require the configured API key. When no key is set, they are limited to loopback clients. Receiver-only deployments return 404 for management, docs, and OpenAPI routes.
+```mermaid
+flowchart TD
+  A[Decoy opened] --> B[Receiver gets image request]
+  B --> C[Save event]
+  C --> D[Mark first hit, repeat, or scanner]
+  D --> E[Console or SMTP alert]
+  D --> F[Log Analytics ingestion]
+  F --> G{Sentinel rule}
+  G -->|High or critical first hit| H[High incident]
+  G -->|Scanner first hit| I[Medium incident]
+  G -->|Repeat| J[Investigation only]
+  H --> K[Analyst review]
+  I --> K
+  J --> K
+```
 
-For each callback, the receiver:
+## Main parts
 
-1. saves the observation;
-2. calculates the first-hit, repeat, and scanner fields;
-3. saves the triage decision;
-4. tries console or SMTP delivery; and
-5. tries Logs Ingestion separately.
+| Part | Job |
+| --- | --- |
+| Decoy generator | Creates a DOCX or HTML file with a callback image. |
+| Local receiver | Stores events in SQLite and sends local alerts. |
+| Azure receiver | Runs in Container Apps and accepts controlled HTTPS callbacks. |
+| Table Storage | Stores cloud events and delivery results. |
+| Logs Ingestion adapter | Sends redacted events to `CanaryHit_CL`. |
+| Sentinel rules | Creates High incidents for eligible first hits and Medium incidents for scanner first hits. |
+| Managed identity | Gives the app only the Azure permissions it needs. |
 
-A delivery failure does not remove the event or stop the GIF response. Status-write failures log an exception category.
+## Important rules
 
-SQLite migrations add new columns without changing old events. Azure events include a UUID for SIEM correlation. Delivery status is saved on the event; the provisioned outbox table is unused.
+- The event is saved before alerting or SIEM ingestion.
+- Alert and ingestion failures are recorded separately.
+- Repeat matching uses the token and User-Agent within the configured window.
+- The raw callback token is not sent to the event API or Sentinel; records use a hashed canary ID.
+- Forwarded headers are ignored by default, so `SourceIp` is the direct connection peer.
 
-The event includes the classification, severity, scanner flag, repeat data, reason, and recommended action. Public API output and SIEM records use a hashed canary ID. Stored request paths are redacted.
+## Source files
 
-[Architecture](../ARCHITECTURE.md) - [Sentinel fields](../SENTINEL.md)
+- [Receiver and routes](../app/main.py)
+- [SQLite backend](../app/db.py)
+- [Azure Table backend](../app/azure_storage.py)
+- [Logs Ingestion adapter](../app/azure_ingestion.py)
+- [Infrastructure and Sentinel rule](../infra/main.bicep)
+
+[Receiver fields](receiver.md) - [Azure deployment](azure-deployment.md) - [Validation](validation.md)

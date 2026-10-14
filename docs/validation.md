@@ -1,6 +1,6 @@
 # Validation results
 
-The local tests ran on 7 September 2026. The final cloud events were recorded on 8 September UTC. The saved [cloud evidence](docs/evidence/public/upgrade/README.md) includes the event IDs and incident links.
+The local tests ran on 7 September 2026. The final cloud events were recorded on 8 September UTC. The saved [cloud evidence](evidence/public/upgrade/README.md) includes the event IDs and incident links.
 
 ## Main results
 
@@ -31,9 +31,9 @@ The event contract includes the time, event ID, hashed canary ID, filename, conn
 
 ## SMTP and Azure
 
-The [SMTP transcript](docs/evidence/public/upgrade/smtp-result.txt) shows two callbacks, two saved events, one accepted message, and one suppressed repeat. Cloud SMTP was not configured.
+The [SMTP transcript](evidence/public/upgrade/smtp-result.txt) shows two callbacks, two saved events, one accepted message, and one suppressed repeat. Cloud SMTP was not configured.
 
-The Word event came from opening the document, not from a separate controlled request to that token. The [Word evidence](docs/evidence/public/upgrade/README.md#word-to-sentinel) shows the matching records.
+The Word event came from opening the document, not from a separate controlled request to that token. The [Word evidence](evidence/public/upgrade/README.md#word-to-sentinel) shows the matching records.
 
 ## Limits
 
